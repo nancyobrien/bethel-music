@@ -111,7 +111,7 @@ Plan._typeConfig = {
   sqlTable: "plans",
   uniqueKey: "id",
 };
-
+//test
 const QueryRoot = new graphql.GraphQLObjectType({
   name: "Query",
   fields: () => ({
