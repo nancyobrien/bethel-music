@@ -18,7 +18,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "devstart": "nodemon server.js"
+    "devstart": "nodemon server.js",
+    "create-db": "psql -U postgres < schema.sql",
+    "seed": "npm run create-db && node seed.js"
   },
   "author": "",
   "license": "ISC"

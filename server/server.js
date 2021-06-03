@@ -4,7 +4,6 @@ const { graphqlHTTP } = require("express-graphql");
 const graphql = require("graphql");
 const { Client } = require("pg");
 const joinMonster = require("join-monster").default;
-const { db } = require("./pgAdaptor");
 
 const config = {
   host: process.env.POSTGRES_HOST,
