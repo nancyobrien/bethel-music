@@ -28,7 +28,12 @@ var Venue = new graphql.GraphQLObjectType({
   fields: () => ({
     id: { type: graphql.GraphQLInt },
     name: { type: graphql.GraphQLString },
-    pco_id: { type: graphql.GraphQLString },
+    pcoID: {
+      type: graphql.GraphQLString,
+      extensions: {
+        joinMonster: { sqlColumn: "pco_id" },
+      },
+    },
   }),
 });
 
@@ -44,7 +49,12 @@ var Song = new graphql.GraphQLObjectType({
   fields: () => ({
     id: { type: graphql.GraphQLInt },
     title: { type: graphql.GraphQLString },
-    pco_id: { type: graphql.GraphQLString },
+    pcoID: {
+      type: graphql.GraphQLString,
+      extensions: {
+        joinMonster: { sqlColumn: "pco_id" },
+      },
+    },
     author: { type: graphql.GraphQLString },
     archive: { type: graphql.GraphQLBoolean },
     is_christmas: { type: graphql.GraphQLBoolean },
@@ -65,7 +75,12 @@ const Leader = new graphql.GraphQLObjectType({
   fields: () => ({
     id: { type: graphql.GraphQLString },
     name: { type: graphql.GraphQLString },
-    pco_id: { type: graphql.GraphQLString },
+    pcoID: {
+      type: graphql.GraphQLString,
+      extensions: {
+        joinMonster: { sqlColumn: "pco_id" },
+      },
+    },
   }),
 });
 
@@ -80,7 +95,12 @@ var PlanSong = new graphql.GraphQLObjectType({
   name: "PlanSong",
   fields: () => ({
     id: { type: graphql.GraphQLInt },
-    pco_id: { type: graphql.GraphQLString },
+    pcoID: {
+      type: graphql.GraphQLString,
+      extensions: {
+        joinMonster: { sqlColumn: "pco_id" },
+      },
+    },
     song_key: { type: graphql.GraphQLString },
     slot: { type: graphql.GraphQLInt },
     plan: {
@@ -114,7 +134,12 @@ var Plan = new graphql.GraphQLObjectType({
   fields: () => ({
     id: { type: graphql.GraphQLInt },
     plan_date: { type: graphql.GraphQLString },
-    pco_id: { type: graphql.GraphQLString },
+    pcoID: {
+      type: graphql.GraphQLString,
+      extensions: {
+        joinMonster: { sqlColumn: "pco_id" },
+      },
+    },
     venue: {
       type: Venue,
       sqlJoin: (planTable, venueTable, args) =>
