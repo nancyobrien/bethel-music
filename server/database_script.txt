@@ -1,13 +1,13 @@
 CREATE TABLE venues (
   id SERIAL PRIMARY KEY,
-  pcoID VARCHAR (255),
+  pco_id VARCHAR (255),
   name VARCHAR (255),
   url VARCHAR(500)
 );
 
 CREATE TABLE plans (
  id SERIAL PRIMARY KEY,
- pcoID VARCHAR (255),
+ pco_id VARCHAR (255),
  plan_date DATE,
  url VARCHAR(500),
  venue_id INT NOT NULL REFERENCES venues (id)
@@ -15,7 +15,7 @@ CREATE TABLE plans (
 
 CREATE TABLE songs (
   id SERIAL PRIMARY KEY,
-  pcoID VARCHAR (255),
+  pco_id VARCHAR (255),
   title VARCHAR (255),
   url VARCHAR(500),
   song_length VARCHAR (255),
@@ -31,14 +31,14 @@ CREATE TABLE songs (
 
 CREATE TABLE leaders (
   id SERIAL PRIMARY KEY,
-  pcoID VARCHAR (255),
+  pco_id VARCHAR (255),
   url VARCHAR (500),
   name VARCHAR (255)
 );
 
 CREATE TABLE plan_song (
   id SERIAL PRIMARY KEY,
-  pcoID VARCHAR (255),
+  pco_id VARCHAR (255),
   url VARCHAR (500),
   plan_id INT NOT NULL REFERENCES plans (id),
   song_id INT NOT NULL REFERENCES songs (id),
