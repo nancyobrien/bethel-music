@@ -4,6 +4,8 @@ const { graphqlHTTP } = require("express-graphql");
 const graphql = require("graphql");
 const { Client } = require("pg");
 const joinMonster = require("join-monster").default;
+const axios = require("axios");
+const btoa = require("btoa");
 
 const config = {
   host: process.env.POSTGRES_HOST,
@@ -259,4 +261,57 @@ app.use(
     graphiql: true,
   })
 );
+
+app.use("/fetchData/:id", function(req, res, next) {
+  console.log("Request Type:", req.method);
+  next();
+});
+
+app.get("/test/:id", function(req, res, next) {
+  res.send("xxx" + req.params.id);
+  axios
+    .get("https://jsonplaceholder.typicode.com/users")
+    .then((res) => {
+      const headerDate =
+        res.headers && res.headers.date ? res.headers.date : "no response date";
+      console.log("Status Code:", res.status);
+      console.log("Date in Response header:", headerDate);
+
+      const users = res.data;
+
+      for (user of users) {
+        console.log(`Got user with id: ${user.id}, name: ${user.name}`);
+      }
+    })
+    .catch((err) => {
+      console.log("Error: ", err.message);
+    });
+});
+
+app.get("/fetchData/:id", function(req, res, next) {
+  res.send("yyy" + req.params.id);
+
+  var username = process.env.PCO_USER;
+  var password = process.env.PCO_KEY;
+
+  axios
+    .get("https://api.planningcenteronline.com/services/v2/service_types", {
+      withCredentials: true,
+      auth: {
+        username,
+        password,
+      },
+    })
+    .then((res) => {
+      const headerDate =
+        res.headers && res.headers.date ? res.headers.date : "no response date";
+      console.log("Status Code:", res.status);
+      console.log("Date in Response header:", headerDate);
+      console.log(res.data.data.length);
+    })
+    .catch((err) => {
+      console.log("Error: ", err.message);
+    });
+});
+
 app.listen(4000);
