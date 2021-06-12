@@ -7,4 +7,6 @@ module.exports = {
   database: process.env.POSTGRES_DB,
   user: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
+  pcoUser: process.env.PCO_USER,
+  pcoKey: process.env.PCO_KEY,
 };

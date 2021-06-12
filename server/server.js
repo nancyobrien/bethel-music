@@ -5,7 +5,8 @@ const graphql = require("graphql");
 const { Client } = require("pg");
 const joinMonster = require("join-monster").default;
 const axios = require("axios");
-const btoa = require("btoa");
+const { get } = require("./axit");
+const { getVenues } = require("./processPCO");
 
 const config = {
   host: process.env.POSTGRES_HOST,
@@ -170,6 +171,12 @@ const QueryRoot = new graphql.GraphQLObjectType({
     },
     venues: {
       type: new graphql.GraphQLList(Venue),
+      extensions: {
+        joinMonster: {
+          where: (venueTable, args, context) =>
+            `${venueTable}.archived = FALSE`,
+        },
+      },
       resolve: (parent, args, context, resolveInfo) => {
         return joinMonster(resolveInfo, {}, (sql) => {
           return client.query(sql);
@@ -179,7 +186,12 @@ const QueryRoot = new graphql.GraphQLObjectType({
     venue: {
       type: Venue,
       args: { id: { type: graphql.GraphQLID } },
-      where: (venueTable, args, context) => `${venueTable}.id = ${args.id}`,
+
+      extensions: {
+        joinMonster: {
+          where: (venueTable, args, context) => `${venueTable}.id = ${args.id}`,
+        },
+      },
       resolve: (parent, args, context, resolveInfo) => {
         return joinMonster(resolveInfo, {}, (sql) => {
           return client.query(sql);
@@ -291,27 +303,25 @@ app.get("/test/:id", function(req, res, next) {
 app.get("/fetchData/:id", function(req, res, next) {
   res.send("yyy" + req.params.id);
 
-  var username = process.env.PCO_USER;
-  var password = process.env.PCO_KEY;
-
-  axios
-    .get("https://api.planningcenteronline.com/services/v2/service_types", {
-      withCredentials: true,
-      auth: {
-        username,
-        password,
-      },
-    })
+  get("https://api.planningcenteronline.com/services/v2/service_types")
     .then((res) => {
       const headerDate =
         res.headers && res.headers.date ? res.headers.date : "no response date";
       console.log("Status Code:", res.status);
       console.log("Date in Response header:", headerDate);
       console.log(res.data.data.length);
+      const services = res.data.data;
+      console.log(services.find((s) => s.attributes.name === "LIVE VENUE").id);
     })
     .catch((err) => {
       console.log("Error: ", err.message);
     });
+});
+
+app.get("/getVenues", function(req, res, next) {
+  const venues = getVenues();
+  console.log(venues.rows);
+  res.send("venues" + venues.rows);
 });
 
 app.listen(4000);

@@ -7,7 +7,7 @@ const venuesData = [
 ];
 
 function insertData(name, pco_id) {
-  const query = "INSERT INTO venues (name, pco_id) VALUES ($1, $2)";
+  /* const query = "INSERT INTO venues (name, pco_id) VALUES ($1, $2)";
   // Connect to the db instance
   db.connect((err, client, done) => {
     if (err) throw err;
@@ -24,30 +24,48 @@ function insertData(name, pco_id) {
     } finally {
       done();
     }
+  }); */
+}
+
+function getVenues() {
+  const query = "Select * FROM venues";
+  let results = {};
+  db.connect((err, client, done) => {
+    if (err) throw err;
+    try {
+      client.query(query, [], (err, res) => {
+        if (err) {
+          // We can just console.log any errors
+          console.log(err.stack);
+        } else {
+          return res;
+        }
+      });
+    } finally {
+      done();
+    }
   });
 }
 
-function fetchData() {
-  get("https://api.planningcenteronline.com/services/v2/service_types")
+function getPlans(venueID) {
+  get(
+    `https://api.planningcenteronline.com/services/v2/service_types/${venueID}/plans?offset=0`
+  )
     .then((res) => {
       const services = res.data.data;
 
-      venuesData.forEach((row) => {
-        const service = services.find(
-          (s) => s.attributes.name === row.pco_name
-        );
-        if (service) {
-          insertData(row.name, service.id);
-        }
-      });
+      console.log(services.length);
     })
     .catch((err) => {
       console.log("Error: ", err.message);
     });
 }
 
-function seed() {
-  fetchData();
-}
-
-seed();
+module.exports = {
+  getVenues: () => {
+    return getVenues();
+  },
+  getPlans: (venue) => {
+    return fetchData(venue);
+  },
+};

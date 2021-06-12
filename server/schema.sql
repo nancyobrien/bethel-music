@@ -11,7 +11,9 @@ CREATE TABLE venues (
   id SERIAL PRIMARY KEY,
   pco_id VARCHAR (255),
   name VARCHAR (255),
-  url VARCHAR(500)
+  url VARCHAR(500),
+  last_confirmed_offset INT NOT NULL DEFAULT 0,
+  archived BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE plans (
@@ -19,7 +21,8 @@ CREATE TABLE plans (
  pco_id VARCHAR (255),
  plan_date DATE,
  url VARCHAR(500),
- venue_id INT NOT NULL REFERENCES venues (id)
+ venue_id INT NOT NULL REFERENCES venues (id),
+ isComplete BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE songs (
