@@ -1,5 +1,11 @@
 const dotenv = require("dotenv");
-dotenv.config();
+const result = dotenv.config()
+
+if (result.error) {
+  throw result.error
+}
+
+//console.log(result.parsed)
 // Single source to handle all the env vars
 module.exports = {
   host: process.env.POSTGRES_HOST,
