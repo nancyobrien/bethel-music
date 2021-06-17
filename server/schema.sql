@@ -23,7 +23,9 @@ CREATE TABLE plans (
  url VARCHAR(500),
  venue_id INT NOT NULL REFERENCES venues (id),
  isInvalid BOOLEAN NOT NULL DEFAULT FALSE,
- isComplete BOOLEAN NOT NULL DEFAULT FALSE
+ isComplete BOOLEAN NOT NULL DEFAULT FALSE,
+ songsFetched BOOLEAN NOT NULL DEFAULT FALSE,
+ leadersFetched BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE songs (
@@ -59,4 +61,12 @@ CREATE TABLE plan_song (
   song_key VARCHAR (50),
   description VARCHAR (500),
   slot INT
+);
+
+CREATE TABLE plan_leader (
+  id SERIAL PRIMARY KEY,
+  pco_id VARCHAR (255) UNIQUE,
+  url VARCHAR (500),
+  plan_id INT NOT NULL REFERENCES plans (id),
+  leader_id INT NULL REFERENCES leaders (id)
 );

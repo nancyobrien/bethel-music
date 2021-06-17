@@ -7,7 +7,13 @@ const joinMonster = require("join-monster").default;
 const db = require("./db");
 const axios = require("axios");
 const { get } = require("./axit");
-const { getVenues, getPlanItems, getSong, getSongs } = require("./processPCO");
+const {
+  getVenues,
+  getPlanItems,
+  getSong,
+  getSongs,
+  getLeaders,
+} = require("./processPCO");
 
 const config = {
   host: process.env.POSTGRES_HOST,
@@ -94,6 +100,45 @@ Leader.extensions = {
   },
 };
 
+var PlanLeader = new graphql.GraphQLObjectType({
+  name: "PlanLeader",
+  fields: () => ({
+    id: { type: graphql.GraphQLInt },
+    pcoID: {
+      type: graphql.GraphQLString,
+      extensions: {
+        joinMonster: { sqlColumn: "pco_id" },
+      },
+    },
+    plan: {
+      type: Plan,
+      extensions: {
+        joinMonster: {
+          sqlJoin: (planLeaderTable, planTable, args) =>
+            `${planLeaderTable}.plan_id = ${planTable}.id`,
+        },
+      },
+    },
+    leader: {
+      type: Leader,
+      extensions: {
+        joinMonster: {
+          sqlJoin: (planLeaderTable, leaderTable, args) =>
+            `${planLeaderTable}.leader_id = ${leaderTable}.id`,
+        },
+      },
+    },
+  }),
+});
+
+
+PlanLeader.extensions = {
+  joinMonster: {
+    sqlTable: "plan_leader",
+    uniqueKey: "id",
+  },
+};
+
 var PlanSong = new graphql.GraphQLObjectType({
   name: "PlanSong",
   fields: () => ({
@@ -108,18 +153,30 @@ var PlanSong = new graphql.GraphQLObjectType({
     slot: { type: graphql.GraphQLInt },
     plan: {
       type: Plan,
-      sqlJoin: (planSongTable, planTable, args) =>
-        `${planSongTable}.plan_id = ${planTable}.id`,
+      extensions: {
+        joinMonster: {
+          sqlJoin: (planSongTable, planTable, args) =>
+            `${planSongTable}.plan_id = ${planTable}.id`,
+        },
+      },
     },
     song: {
       type: Song,
-      sqlJoin: (planSongTable, songTable, args) =>
-        `${planSongTable}.song_id = ${songTable}.id`,
+      extensions: {
+        joinMonster: {
+          sqlJoin: (planSongTable, songTable, args) =>
+            `${planSongTable}.song_id = ${songTable}.id`,
+        },
+      },
     },
     leader: {
       type: Leader,
-      sqlJoin: (planSongTable, leaderTable, args) =>
-        `${planSongTable}.leader_id = ${leaderTable}.id`,
+      extensions: {
+        joinMonster: {
+          sqlJoin: (planSongTable, leaderTable, args) =>
+            `${planSongTable}.leader_id = ${leaderTable}.id`,
+        },
+      },
     },
   }),
 });
@@ -145,13 +202,30 @@ var Plan = new graphql.GraphQLObjectType({
     },
     venue: {
       type: Venue,
-      sqlJoin: (planTable, venueTable, args) =>
-        `${planTable}.venue_id = ${venueTable}.id`,
+      extensions: {
+        joinMonster: {
+          sqlJoin: (planTable, venueTable, args) =>
+            `${planTable}.venue_id = ${venueTable}.id`,
+        },
+      },
     },
     songs: {
       type: graphql.GraphQLList(PlanSong),
-      sqlJoin: (planTable, planSongTable, args) =>
-        `${planTable}.id = ${planSongTable}.plan_id`,
+      extensions: {
+        joinMonster: {
+          sqlJoin: (planTable, planSongTable, args) =>
+            `${planTable}.id = ${planSongTable}.plan_id`,
+        },
+      },
+    },
+    leaders: {
+      type: graphql.GraphQLList(PlanLeader),
+      extensions: {
+        joinMonster: {
+          sqlJoin: (planTable, planLeaderTable, args) =>
+            `${planTable}.id = ${planLeaderTable}.plan_id`,
+        },
+      },
     },
   }),
 });
@@ -357,6 +431,10 @@ app.get("/getSongs", function(req, res, next) {
   res.send("getSongs");
 });
 
+app.get("/getLeaders", function(req, res, next) {
+  getLeaders();
+  res.send("getLeaders");
+});
 app.get("/getSong/:pco_id", function(req, res, next) {
   const song = getSong(req.params.pco_id);
   res.send(JSON.stringify(song) + " x");

@@ -78,70 +78,83 @@ function addPlan(planData, venue) {
   );
 }
 
-function stubSong(song) {
+function stubSong(planSong) {
   const songQuery = "select * from songs where pco_id = $1";
   const songInsert = "INSERT INTO songs (pco_id, title) VALUES ($1, $2)";
   //check to see if the song already exists
-  executeQuery(songQuery, [song.pco_id], (err, res) => {
-    if (err) {
-      // We can just console.log any errors
-      console.log(err.stack);
-    } else {
-      if (res.rows.length == 0) {
-        executeQuery(songInsert, [song.pco_id, song.title], (err, res) => {
-          if (err) {
-            // We can just console.log any errors
-            console.log(err.stack);
-          } else {
-            //song added
-          }
-        });
+  executeQuery(
+    songQuery,
+    [planSong.relationships.song?.data?.id],
+    (err, res) => {
+      if (err) {
+        // We can just console.log any errors
+        console.log(err.stack);
       } else {
-        return res.rows[0].id;
-      }
-    }
-  });
-}
-
-function addPlanSongs(planSongs) {
-  const song_ids = [
-    ...new Set(planSongs.map((ps) => ps.relationships.song?.data?.id)),
-  ]; //unique pco ids for actual songs
-
-  //Stub out songs first
-  song_ids.forEach((pco_id) => {
-    const title = planSongs.find(
-      (ps) => ps.relationships.song?.data?.id === pco_id
-    ).attributes.title;
-    stubSong({ pco_id, title });
-  });
-
-  const query =
-    "INSERT INTO plan_song (pco_id, url, plan_id, song_id, song_key, description, slot) \
-select $1, $2, $3, s.id, $5, $6, $7 from songs s where s.pco_id = $4";
-
-  planSongs.forEach((planSong, idx) => {
-    executeQuery(
-      query,
-      [
-        planSong.id,
-        planSong.links.self,
-        planSong.plan_id,
-        planSong.relationships.song?.data?.id,
-        planSong.attributes.key_name,
-        planSong.attributes.description?.substring(0, 500),
-        planSong.slot,
-      ],
-      (err, res) => {
-        if (err) {
-          // We can just console.log any errors
-          console.log(err.stack);
+        if (res.rows.length == 0) {
+          executeQuery(
+            songInsert,
+            [planSong.relationships.song?.data?.id, planSong.attributes.title],
+            (err, res) => {
+              if (err) {
+                // We can just console.log any errors
+                if (
+                  !err.message.includes(
+                    "duplicate key value violates unique constraint"
+                  )
+                ) {
+                  console.log(
+                    planSong.attributes.title,
+                    err.message,
+                    err.stack
+                  );
+                }
+              } else {
+                //song added
+              }
+            }
+          );
         } else {
-          console.log("inserted " + planSong.attributes.title);
+          return res.rows[0].id;
         }
       }
-    );
-  });
+    }
+  );
+}
+
+function stubLeader(planLeader) {
+  const leaderQuery = "select * from leaders where pco_id = $1";
+  const leaderInsert = "INSERT INTO leaders (pco_id, name) VALUES ($1, $2)";
+  //check to see if the song already exists
+  executeQuery(
+    leaderQuery,
+    [planLeader.relationships.person?.data?.id],
+    (err, res) => {
+      if (err) {
+        // We can just console.log any errors
+        console.log(err.stack);
+      } else {
+        if (res.rows.length == 0) {
+          executeQuery(
+            leaderInsert,
+            [
+              planLeader.relationships.person?.data?.id,
+              planLeader.attributes.name,
+            ],
+            (err, res) => {
+              if (err) {
+                // We can just console.log any errors
+                console.log(planLeader.attributes.name, err.message, err.stack);
+              } else {
+                //person added
+              }
+            }
+          );
+        } else {
+          return res.rows[0].id;
+        }
+      }
+    }
+  );
 }
 
 function getPlanItems() {
@@ -150,7 +163,6 @@ function getPlanItems() {
     from plans p inner join venues v on p.venue_id = v.id \
     WHERE p.isInvalid = FALSE and p.id NOT IN (SELECT plan_id FROM plan_song) limit 75";
 
-  const planSongs = [];
   executeQuery(query, [], (err, res) => {
     if (err) {
       // We can just console.log any errors
@@ -208,6 +220,8 @@ function getPlanItems() {
         });
         //  sleep(20000); //PCO has a rate limit of 100 requests in 20 seconds, so wait before we go get more.
         // getPlanItems();
+      } else {
+        console.log("all done");
       }
     }
   });
@@ -247,7 +261,7 @@ function updateSong(pco_id) {
 }
 
 function updateIncompleteSongs() {
-  const query = "Select * from songs WHERE url is NULL limit 50";
+  const query = "Select * from songs WHERE url is NULL limit 90";
 
   executeQuery(query, [], (err, res) => {
     if (err) {
@@ -262,6 +276,71 @@ function updateIncompleteSongs() {
         // sleep(1000); //PCO has a rate limit of 100 requests in 20 seconds, so wait before we go get more.
         // console.log("done waiting");
         // updateIncompleteSongs();
+      } else {
+        console.log("all done");
+      }
+    }
+  });
+}
+
+function getLeaders() {
+  const query =
+    "Select p.*, v.pco_id as venue_pco_id \
+    from plans p inner join venues v on p.venue_id = v.id \
+    WHERE p.leadersFetched = FALSE limit 50";
+
+  const validPositions = ["Worship Leader", "Co-worship leader", "Female bVox"];
+
+  executeQuery(query, [], (err, res) => {
+    if (err) {
+      // We can just console.log any errors
+      console.log(err.stack);
+    } else {
+      if (res.rows.length) {
+        res.rows.forEach((plan) => {
+          get(
+            `https://api.planningcenteronline.com/services/v2/service_types/${plan.venue_pco_id}/plans/${plan.pco_id}/team_members`
+          )
+            .then((res2) => {
+              const leaderFetchedUpdate =
+                "update plans set leadersFetched = TRUE where id = $1";
+              executeQuery(leaderFetchedUpdate, [plan.id], () => {});
+
+              const leaders = res2.data.data.filter(
+                (leader) =>
+                  leader.type === "PlanPerson" &&
+                  leader.relationships.person?.data?.id &&
+                  validPositions.includes(leader.attributes?.team_position_name)
+              );
+              const query =
+                "INSERT INTO plan_leader (pco_id, url, plan_id, leader_id) \
+            select $1, $2, $3, leaders.id from leaders where leaders.pco_id = $4";
+              console.log("leaderes", leaders.length);
+              leaders.forEach((leader) => {
+                stubLeader(leader);
+                executeQuery(
+                  query,
+                  [
+                    leader.id,
+                    leader.links.self,
+                    plan.id,
+                    leader.relationships.person?.data?.id,
+                  ],
+                  (err, res) => {
+                    if (err) {
+                      // We can just console.log any errors
+                      console.log(err.stack);
+                    } else {
+                      console.log("inserted " + leader.attributes.name);
+                    }
+                  }
+                );
+              });
+            })
+            .catch((err) => {
+              console.log("Error: ", err.message);
+            });
+        });
       } else {
         console.log("all done");
       }
@@ -284,5 +363,8 @@ module.exports = {
   },
   getSongs: () => {
     return updateIncompleteSongs();
+  },
+  getLeaders: () => {
+    return getLeaders();
   },
 };
