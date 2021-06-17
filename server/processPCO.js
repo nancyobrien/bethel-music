@@ -1,64 +1,272 @@
 const db = require("./db");
 const { get } = require("./axit");
+const { sleep } = require("./utils");
 
 const venuesData = [
   { name: "Pasco", pco_name: "West Pasco Sunday Services" },
   { name: "Richland", pco_name: "LIVE VENUE" },
 ];
 
-function insertData(name, pco_id) {
-  /* const query = "INSERT INTO venues (name, pco_id) VALUES ($1, $2)";
-  // Connect to the db instance
+function executeQuery(query, values, callback) {
   db.connect((err, client, done) => {
     if (err) throw err;
     try {
-      // For each line we run the insert query with the row providing the column values
-      client.query(query, [name, pco_id], (err, res) => {
-        if (err) {
-          // We can just console.log any errors
-          console.log(err.stack);
-        } else {
-          console.log("inserted " + res.rowCount + " row:", { name, pco_id });
-        }
-      });
-    } finally {
-      done();
-    }
-  }); */
-}
-
-function getVenues() {
-  const query = "Select * FROM venues";
-  let results = {};
-  db.connect((err, client, done) => {
-    if (err) throw err;
-    try {
-      client.query(query, [], (err, res) => {
-        if (err) {
-          // We can just console.log any errors
-          console.log(err.stack);
-        } else {
-          return res;
-        }
-      });
+      client.query(query, values, callback);
     } finally {
       done();
     }
   });
 }
 
-function getPlans(venueID) {
+function getVenues() {
+  const query = "Select * FROM venues";
+  let results = {};
+
+  executeQuery(query, [], (err, res) => {
+    if (err) {
+      // We can just console.log any errors
+      console.log(err.stack);
+    } else {
+      console.log("results rows", res.rows);
+      //last_confirmed_offset
+      res.rows.forEach((venue) => getPlans(venue));
+    }
+  });
+}
+
+function getPlans(venue, recordsPerPage = 90) {
   get(
-    `https://api.planningcenteronline.com/services/v2/service_types/${venueID}/plans?offset=0`
+    `https://api.planningcenteronline.com/services/v2/service_types/${venue.pco_id}/plans?offset=${venue.last_confirmed_offset}&per_page=${recordsPerPage}`
   )
     .then((res) => {
-      const services = res.data.data;
-
-      console.log(services.length);
+      const plans = res.data.data;
+      const newOffset =
+        venue.last_confirmed_offset + Math.min(recordsPerPage, plans.length);
+      plans.forEach((plan) => addPlan(plan, venue));
+      executeQuery(
+        "update venues set last_confirmed_offset = $1 where id = $2",
+        [newOffset, venue.id],
+        () => {}
+      );
+      console.log("plans fetch to ", newOffset, " for ", venue.name);
     })
     .catch((err) => {
       console.log("Error: ", err.message);
     });
+}
+
+function addPlan(planData, venue) {
+  const query =
+    "INSERT INTO plans (pco_id, plan_date, url, venue_id) VALUES ($1, $2, $3, $4)";
+
+  executeQuery(
+    query,
+    [
+      planData.id,
+      planData.attributes.sort_date,
+      planData.attributes.planning_center_url,
+      venue.id,
+    ],
+    (err, res) => {
+      if (err) {
+        // We can just console.log any errors
+        console.log(err.stack);
+      } else {
+        //  console.log("inserted " + res.rowCount + " row:", { date: planData.attributes.sort_date, pco_id: planData.id });
+      }
+    }
+  );
+}
+
+function stubSong(song) {
+  const songQuery = "select * from songs where pco_id = $1";
+  const songInsert = "INSERT INTO songs (pco_id, title) VALUES ($1, $2)";
+  //check to see if the song already exists
+  executeQuery(songQuery, [song.pco_id], (err, res) => {
+    if (err) {
+      // We can just console.log any errors
+      console.log(err.stack);
+    } else {
+      if (res.rows.length == 0) {
+        executeQuery(songInsert, [song.pco_id, song.title], (err, res) => {
+          if (err) {
+            // We can just console.log any errors
+            console.log(err.stack);
+          } else {
+            //song added
+          }
+        });
+      } else {
+        return res.rows[0].id;
+      }
+    }
+  });
+}
+
+function addPlanSongs(planSongs) {
+  const song_ids = [
+    ...new Set(planSongs.map((ps) => ps.relationships.song?.data?.id)),
+  ]; //unique pco ids for actual songs
+
+  //Stub out songs first
+  song_ids.forEach((pco_id) => {
+    const title = planSongs.find(
+      (ps) => ps.relationships.song?.data?.id === pco_id
+    ).attributes.title;
+    stubSong({ pco_id, title });
+  });
+
+  const query =
+    "INSERT INTO plan_song (pco_id, url, plan_id, song_id, song_key, description, slot) \
+select $1, $2, $3, s.id, $5, $6, $7 from songs s where s.pco_id = $4";
+
+  planSongs.forEach((planSong, idx) => {
+    executeQuery(
+      query,
+      [
+        planSong.id,
+        planSong.links.self,
+        planSong.plan_id,
+        planSong.relationships.song?.data?.id,
+        planSong.attributes.key_name,
+        planSong.attributes.description?.substring(0, 500),
+        planSong.slot,
+      ],
+      (err, res) => {
+        if (err) {
+          // We can just console.log any errors
+          console.log(err.stack);
+        } else {
+          console.log("inserted " + planSong.attributes.title);
+        }
+      }
+    );
+  });
+}
+
+function getPlanItems() {
+  const query =
+    "Select p.*, v.pco_id as venue_pco_id \
+    from plans p inner join venues v on p.venue_id = v.id \
+    WHERE p.isInvalid = FALSE and p.id NOT IN (SELECT plan_id FROM plan_song) limit 75";
+
+  const planSongs = [];
+  executeQuery(query, [], (err, res) => {
+    if (err) {
+      // We can just console.log any errors
+      console.log(err.stack);
+    } else {
+      if (res.rows.length) {
+        res.rows.forEach((plan) => {
+          get(
+            `https://api.planningcenteronline.com/services/v2/service_types/${plan.venue_pco_id}/plans/${plan.pco_id}/items`
+          )
+            .then((res2) => {
+              const songs = res2.data.data.filter(
+                (plan_song) =>
+                  !!plan_song.relationships.song?.data?.id &&
+                  plan_song.relationships.song?.data?.id !== "0"
+              );
+              //TODO: only mark invalid if plan date is in the past. Future plans without songs just haven't been planned yet.
+              if (songs.length === 0) {
+                const invalidUpdate =
+                  "update plans set isInvalid = TRUE where id = $1";
+                executeQuery(invalidUpdate, [plan.id], () => {});
+              } else {
+                const query =
+                  "INSERT INTO plan_song (pco_id, url, plan_id, song_id, song_key, description, slot) \
+              select $1, $2, $3, s.id, $5, $6, $7 from songs s where s.pco_id = $4";
+
+                songs.forEach((song, idx) => {
+                  stubSong(song);
+                  executeQuery(
+                    query,
+                    [
+                      song.id,
+                      song.links.self,
+                      plan.id,
+                      song.relationships.song?.data?.id,
+                      song.attributes.key_name,
+                      song.attributes.description?.substring(0, 500),
+                      idx,
+                    ],
+                    (err, res) => {
+                      if (err) {
+                        // We can just console.log any errors
+                        console.log(err.stack);
+                      } else {
+                        console.log("inserted " + song.attributes.title);
+                      }
+                    }
+                  );
+                });
+              }
+            })
+            .catch((err) => {
+              console.log("Error: ", err.message);
+            });
+        });
+        //  sleep(20000); //PCO has a rate limit of 100 requests in 20 seconds, so wait before we go get more.
+        // getPlanItems();
+      }
+    }
+  });
+}
+
+function updateSong(pco_id) {
+  const query =
+    "update songs set url = $2,  copyright = $3, author = $4, ccli_number = $5, title = $6 where pco_id = $1";
+  get(`https://api.planningcenteronline.com/services/v2/songs/${pco_id}`)
+    .then((res) => {
+      const attributes = res.data.data.attributes;
+      const links = res.data.data.links;
+
+      executeQuery(
+        query,
+        [
+          pco_id,
+          links.self,
+          attributes.copyright?.substring(0, 500),
+          attributes.author,
+          attributes.ccli_number,
+          attributes.title,
+        ],
+        (err, res) => {
+          if (err) {
+            // We can just console.log any errors
+            console.log(err.stack);
+          } else {
+            console.log("updated " + attributes.title);
+          }
+        }
+      );
+    })
+    .catch((err) => {
+      console.log("Error: ", err.message);
+    });
+}
+
+function updateIncompleteSongs() {
+  const query = "Select * from songs WHERE url is NULL limit 50";
+
+  executeQuery(query, [], (err, res) => {
+    if (err) {
+      // We can just console.log any errors
+      console.log(err.stack);
+    } else {
+      if (res.rows.length) {
+        res.rows.forEach((song) => {
+          updateSong(song.pco_id);
+        });
+        // console.log("waiting");
+        // sleep(1000); //PCO has a rate limit of 100 requests in 20 seconds, so wait before we go get more.
+        // console.log("done waiting");
+        // updateIncompleteSongs();
+      } else {
+        console.log("all done");
+      }
+    }
+  });
 }
 
 module.exports = {
@@ -66,6 +274,15 @@ module.exports = {
     return getVenues();
   },
   getPlans: (venue) => {
-    return fetchData(venue);
+    return getPlans(venue);
+  },
+  getPlanItems: () => {
+    return getPlanItems();
+  },
+  getSong: (pco_id) => {
+    return getSong(pco_id);
+  },
+  getSongs: () => {
+    return updateIncompleteSongs();
   },
 };

@@ -4,9 +4,10 @@ const { graphqlHTTP } = require("express-graphql");
 const graphql = require("graphql");
 const { Client } = require("pg");
 const joinMonster = require("join-monster").default;
+const db = require("./db");
 const axios = require("axios");
 const { get } = require("./axit");
-const { getVenues } = require("./processPCO");
+const { getVenues, getPlanItems, getSong, getSongs } = require("./processPCO");
 
 const config = {
   host: process.env.POSTGRES_HOST,
@@ -302,7 +303,30 @@ app.get("/test/:id", function(req, res, next) {
 
 app.get("/fetchData/:id", function(req, res, next) {
   res.send("yyy" + req.params.id);
+  const query = "Select * from venues";
 
+  // Connect to the db instance
+  db.connect((err, client, done) => {
+    if (err) throw err;
+    try {
+      // For each line we run the insert query with the row providing the column values
+      client.query(query, [], (err, res) => {
+        if (err) {
+          // We can just console.log any errors
+          console.log(err.stack);
+        } else {
+          //console.log(res.rows);
+          res.rows.forEach((row) => {
+            console.log(`${row.pco_id}, ${row.name}`);
+          });
+        }
+      });
+    } finally {
+      done();
+    }
+  });
+
+  //const plansAPI = "https://api.planningcenteronline.com/services/v2/service_types/108692/plans?offset=500&per_page=5"
   get("https://api.planningcenteronline.com/services/v2/service_types")
     .then((res) => {
       const headerDate =
@@ -319,9 +343,23 @@ app.get("/fetchData/:id", function(req, res, next) {
 });
 
 app.get("/getVenues", function(req, res, next) {
-  const venues = getVenues();
-  console.log(venues.rows);
-  res.send("venues" + venues.rows);
+  getVenues();
+  res.send("getVenues");
+});
+
+app.get("/getPlanItems", function(req, res, next) {
+  getPlanItems();
+  res.send("getPlanItems");
+});
+
+app.get("/getSongs", function(req, res, next) {
+  getSongs();
+  res.send("getSongs");
+});
+
+app.get("/getSong/:pco_id", function(req, res, next) {
+  const song = getSong(req.params.pco_id);
+  res.send(JSON.stringify(song) + " x");
 });
 
 app.listen(4000);

@@ -9,7 +9,7 @@ CREATE DATABASE pcomusic;
 
 CREATE TABLE venues (
   id SERIAL PRIMARY KEY,
-  pco_id VARCHAR (255),
+  pco_id VARCHAR (255) UNIQUE,
   name VARCHAR (255),
   url VARCHAR(500),
   last_confirmed_offset INT NOT NULL DEFAULT 0,
@@ -18,16 +18,17 @@ CREATE TABLE venues (
 
 CREATE TABLE plans (
  id SERIAL PRIMARY KEY,
- pco_id VARCHAR (255),
+ pco_id VARCHAR (255) UNIQUE,
  plan_date DATE,
  url VARCHAR(500),
  venue_id INT NOT NULL REFERENCES venues (id),
+ isInvalid BOOLEAN NOT NULL DEFAULT FALSE,
  isComplete BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE songs (
   id SERIAL PRIMARY KEY,
-  pco_id VARCHAR (255),
+  pco_id VARCHAR (255) UNIQUE,
   title VARCHAR (255),
   url VARCHAR(500),
   song_length VARCHAR (255),
@@ -43,18 +44,19 @@ CREATE TABLE songs (
 
 CREATE TABLE leaders (
   id SERIAL PRIMARY KEY,
-  pco_id VARCHAR (255),
+  pco_id VARCHAR (255) UNIQUE,
   url VARCHAR (500),
   name VARCHAR (255)
 );
 
 CREATE TABLE plan_song (
   id SERIAL PRIMARY KEY,
-  pco_id VARCHAR (255),
+  pco_id VARCHAR (255) UNIQUE,
   url VARCHAR (500),
   plan_id INT NOT NULL REFERENCES plans (id),
   song_id INT NOT NULL REFERENCES songs (id),
-  leader_id INT NOT NULL REFERENCES leaders (id),
+  leader_id INT NULL REFERENCES leaders (id),
   song_key VARCHAR (50),
+  description VARCHAR (500),
   slot INT
 );
