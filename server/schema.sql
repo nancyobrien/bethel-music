@@ -48,7 +48,9 @@ CREATE TABLE leaders (
   id SERIAL PRIMARY KEY,
   pco_id VARCHAR (255) UNIQUE,
   url VARCHAR (500),
-  name VARCHAR (255)
+  full_name VARCHAR (255),
+  first_name VARCHAR (255),
+  last_name VARCHAR (255)
 );
 
 CREATE TABLE plan_song (
@@ -60,7 +62,8 @@ CREATE TABLE plan_song (
   leader_id INT NULL REFERENCES leaders (id),
   song_key VARCHAR (50),
   description VARCHAR (500),
-  slot INT
+  slot INT,
+  no_leader_found BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE plan_leader (

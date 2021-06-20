@@ -13,6 +13,8 @@ const {
   getSong,
   getSongs,
   getLeaders,
+  updateLeaders,
+  findSongLeaders,
 } = require("./processPCO");
 
 const config = {
@@ -83,7 +85,12 @@ const Leader = new graphql.GraphQLObjectType({
   sqlTable: "leaders",
   fields: () => ({
     id: { type: graphql.GraphQLString },
-    name: { type: graphql.GraphQLString },
+    fullName: {
+      type: graphql.GraphQLString,
+      extensions: {
+        joinMonster: { sqlColumn: "full_name" },
+      },
+    },
     pcoID: {
       type: graphql.GraphQLString,
       extensions: {
@@ -130,7 +137,6 @@ var PlanLeader = new graphql.GraphQLObjectType({
     },
   }),
 });
-
 
 PlanLeader.extensions = {
   joinMonster: {
@@ -193,7 +199,12 @@ var Plan = new graphql.GraphQLObjectType({
 
   fields: () => ({
     id: { type: graphql.GraphQLInt },
-    plan_date: { type: graphql.GraphQLString },
+    planDate: {
+      type: graphql.GraphQLFloat,
+      extensions: {
+        joinMonster: { sqlColumn: "plan_date" },
+      },
+    },
     pcoID: {
       type: graphql.GraphQLString,
       extensions: {
@@ -275,6 +286,16 @@ const QueryRoot = new graphql.GraphQLObjectType({
     },
     plans: {
       type: new graphql.GraphQLList(Plan),
+      args: { venueID: { type: graphql.GraphQLID } },
+      extensions: {
+        joinMonster: {
+          where: (planTable, args, context) => {
+            return `isValid = false ${
+              args.venueID ? `and ${planTable}.venue_id = ${args.venueID}` : ``
+            }`;
+          },
+        },
+      },
       resolve: (parent, args, context, resolveInfo) => {
         return joinMonster(resolveInfo, {}, (sql) => {
           return client.query(sql);
@@ -440,4 +461,12 @@ app.get("/getSong/:pco_id", function(req, res, next) {
   res.send(JSON.stringify(song) + " x");
 });
 
+app.get("/updateLeaders", function(req, res, next) {
+  updateLeaders();
+  res.send("updateLeaders");
+});
+app.get("/findSongLeaders", function(req, res, next) {
+  findSongLeaders();
+  res.send("findSongLeaders");
+});
 app.listen(4000);
