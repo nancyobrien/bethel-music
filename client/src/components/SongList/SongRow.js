@@ -1,20 +1,19 @@
 import React from "react";
 import styled from "@emotion/styled/macro";
+import Icon from "widgets/Icon";
+import Colors from "styles/colors";
 
 export function SongRow({ song }) {
   const startDate = "need start date";
   return (
     <ul className="data-row">
-      <li className="title" data-songid={song.id}>
-        <span className="constraint-width tooltip tooltipstered">
-          {song.title} <span className="ccliNumber">({song.ccliNumber})</span>
-        </span>
-        <span className="tooltipster-icon"></span>
-        <span className="tooltipster-icon mobile-only manual-tooltip"></span>
-        <span className="song-ctrl ctrl1"></span>
-        <span className="song-ctrl ctrl2"></span>
-        <span className="data-label"></span>
-      </li>
+      <SongTitle className="title" data-songid={song.id}>
+        <span>{song.title}</span>{" "}
+        <span className="ccliNumber">({song.ccliNumber})</span>{" "}
+        <SongTip>
+          <Icon icon="ellipsis-h" />
+        </SongTip>
+      </SongTitle>
       <li className="artist" title={song.author}>
         <span className="constraint-width overflow-ellipsis artist-name">
           {song.artist}
@@ -48,3 +47,25 @@ export function SongRow({ song }) {
 }
 
 ///////////////////////////////////////////////////////
+
+const SongTitle = styled.li`
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  > span + span {
+    margin-left: 0.25rem;
+  }
+`;
+
+const SongTip = styled.span`
+  cursor: help;
+  margin-left: 0.5rem !important;
+  background: ${Colors.primary};
+  padding: 0 0.25rem;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+`;

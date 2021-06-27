@@ -1,42 +1,24 @@
 import React from "react";
 import styled from "@emotion/styled/macro";
-import { Icon } from "../../widgets/Icon";
-import { SongTableContext } from "../SongTable";
+import { Icon } from "widgets/Icon";
+
+import { SortFields, useSongList } from "./useSongList";
 
 export function SongTableHeader() {
   return (
     <div className="data-head">
       <ul className="data-header-list drop-list zg-ul-select">
-        <li className="sorter" data-sort="title">
-          <a>
-            Title <span className="subtitle">(CCLI #)</span>
-          </a>
-        </li>
-        <li className="sorter" data-sort="artist">
-          <a>Artist</a>
-        </li>
-        <li className="sorter asc active" data-sort="lastUsed">
-          <a>Last Use (weeks)</a>
-          <span id="ul-arrow" className="arrow"></span>
-        </li>
-        <li className="sorter" data-sort="preferredSlot">
-          <a>Most Common Slot</a>
-        </li>
-        <li className="sorter" data-sort="useCount">
-          <a>Number of Times Played</a>{" "}
-          <div className="timestamp">
-            (since <span className="dataStartDate">1/1/2020</span>)
-          </div>
-        </li>
-        <SongHeaderItem fieldName="title">
+        <SongHeaderItem fieldName={SortFields.TITLE}>
           Title <span className="subtitle">(CCLI #)</span>
         </SongHeaderItem>
-        <SongHeaderItem fieldName="artist">Artist</SongHeaderItem>
-        <SongHeaderItem fieldName="lastUsed">Last Use (weeks)</SongHeaderItem>
-        <SongHeaderItem fieldName="preferredSlot">
+        <SongHeaderItem fieldName={SortFields.ARTIST}>Artist</SongHeaderItem>
+        <SongHeaderItem fieldName={SortFields.LAST_USED}>
+          Last Use (weeks)
+        </SongHeaderItem>
+        <SongHeaderItem fieldName={SortFields.PREFERRED_SLOT}>
           Most Common Slot
         </SongHeaderItem>
-        <SongHeaderItem fieldName="useCount">
+        <SongHeaderItem fieldName={SortFields.USE_COUNT}>
           Number of Times Played{" "}
           <div className="timestamp">
             (since <span className="dataStartDate">1/1/2020</span>)
@@ -44,15 +26,17 @@ export function SongTableHeader() {
         </SongHeaderItem>
       </ul>
       <ul id="data-titles" className="data-header">
-        <SongHeaderItem fieldName="title">
+        <SongHeaderItem fieldName={SortFields.TITLE}>
           Title <span className="subtitle">(CCLI #)</span>
         </SongHeaderItem>
-        <SongHeaderItem fieldName="artist">Artist</SongHeaderItem>
-        <SongHeaderItem fieldName="lastUsed">Last Use (weeks)</SongHeaderItem>
-        <SongHeaderItem fieldName="preferredSlot">
+        <SongHeaderItem fieldName={SortFields.ARTIST}>Artist</SongHeaderItem>
+        <SongHeaderItem fieldName={SortFields.LAST_USED}>
+          Last Use (weeks)
+        </SongHeaderItem>
+        <SongHeaderItem fieldName={SortFields.PREFERRED_SLOT}>
           Most Common Slot
         </SongHeaderItem>
-        <SongHeaderItem fieldName="useCount">
+        <SongHeaderItem fieldName={SortFields.USE_COUNT}>
           Number of Times Played{" "}
           <div className="timestamp">
             (since <span className="dataStartDate">1/1/2020</span>)
@@ -66,20 +50,20 @@ export function SongTableHeader() {
 ////////////////////////////////////////////////////////////////////////////////////////
 
 function SongHeaderItem({ fieldName, children }) {
-  const { sortField, sortDirection, updateSort } =
-    React.useContext(SongTableContext);
+  const { sortField, sortDirection, updateSort } = useSongList();
 
   const isActive = React.useMemo(() => {
     return fieldName === sortField;
   }, [fieldName, sortField]);
-  console.log(isActive, sortField, sortDirection);
   return (
     <HeaderTitle
       sortable={!!fieldName}
       onClick={fieldName ? () => updateSort(fieldName) : () => {}}
     >
-      {children}
-      {isActive && <SortIcon icon="chevron-down" direction={sortDirection} />}
+      <span>{children}</span>
+      <SortIndicator>
+        {isActive && <SortIcon icon="chevron-down" direction={sortDirection} />}
+      </SortIndicator>
     </HeaderTitle>
   );
 }
@@ -93,4 +77,13 @@ const SortIcon = styled(Icon)`
 
 const HeaderTitle = styled.li`
   cursor: ${({ sortable }) => (sortable ? "pointer" : "default")};
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+`;
+
+const SortIndicator = styled.span`
+  display: inline-block;
+  width: 1.25rem;
+  margin-left: 0.25rem;
 `;

@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "@emotion/styled/macro";
 import Colors from "../styles/colors";
+import Icon from "widgets/Icon";
 
 export default function Footer() {
   return (
@@ -8,7 +9,7 @@ export default function Footer() {
       <FooterComponent class="footer">
         <Feedback class="footer_feedback">
           <a href="#" id="show-feedback">
-            <span class="icon-chat-alt-stroke"></span> Send feedback
+            <Icon icon="bubbles" /> Send feedback
           </a>
         </Feedback>
         <LastUpdatedMsg class="footer_last-updated">

@@ -1,93 +1,102 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "@emotion/styled/macro";
 import Colors from "../styles/colors";
 import SongTable from "./SongTable";
+import { useSongList } from "./SongList/useSongList";
+import Icon from "widgets/Icon";
+import { StandardTransition } from "styles/global";
+
+export const SongTableContext = React.createContext();
 
 export default function SongUsage() {
+  const [sortField, setSortField] = useState("lastUsed");
+  const [sortDirection, setSortDirection] = useState(-1);
+  const [slotFilter, setSlotFilter] = useState("");
+  const [searchFilter, setSearchFilter] = useState();
+  const [queryStartDate, setQueryStartDate] = useState("1/1/2000");
+
+  const contextValues = React.useMemo(
+    () => ({
+      sortField,
+      sortDirection,
+      setSortField,
+      setSortDirection,
+      slotFilter,
+      setSlotFilter,
+      searchFilter,
+      setSearchFilter,
+      queryStartDate,
+      setQueryStartDate,
+    }),
+    [queryStartDate, searchFilter, slotFilter, sortDirection, sortField]
+  );
+  const dataLoaded = true;
   return (
-    <div className="content-container" id="tab-songs">
-      <Controls>
-        <SearchContainer>
-          <label>Search by Title or Artist:</label>{" "}
-          <input className="search-title" placeholder="Search" type="search" />
-          <a className="clear-input" href="#"></a>
-        </SearchContainer>
-        <div className="config">
-          <input type="text" className="datepicker" id="startdatepicker" />
-        </div>
-        <Filters />
-      </Controls>
-      <div id="songList" className="data-table">
-        <div className="data-head">
-          <ul className="data-header-list drop-list">
-            <li className="sort" data-sort="title">
-              <a>
-                Title <span className="subtitle">(CCLI #)</span>
-              </a>
-            </li>
-            <li className="sort" data-sort="artist">
-              <a>Artist</a>
-            </li>
-            <li className="sort" data-sort="lastUsed">
-              <a>Last Use (weeks)</a>
-            </li>
-            <li className="sort" data-sort="preferredSlot">
-              <a>Most Common Slot</a>
-            </li>
-            <li className="sort" data-sort="useCount">
-              <a>Number of Times Played</a>{" "}
-              <div className="timestamp">
-                (since <span className="dataStartDate"></span>)
-              </div>
-            </li>
-            <li className="no-sort voting">Vote</li>
-          </ul>
-          <ul id="data-titles" className="data-header"></ul>
-        </div>
-        {/* <!-- IMPORTANT, className="list" have to be on container --> */}
-        <div id="songBody" className="data-content list">
-          <Loading />
-        </div>
+    <SongTableContext.Provider value={contextValues}>
+      <div className="content-container" id="tab-songs">
+        <Controls>
+          <SearchBox />
+          <div className="config">
+            <input type="text" className="datepicker" id="startdatepicker" />
+          </div>
+          <Filters />
+        </Controls>
+
+        {!dataLoaded && <Loading />}
+
         <SongTable />
       </div>
-    </div>
+    </SongTableContext.Provider>
+  );
+}
+
+/////////////////////////////////////////////////////////////
+function SearchBox() {
+  const { searchFilter, setSearchFilter } = useSongList();
+  return (
+    <SearchContainer>
+      <label>Search by Title or Artist:</label>{" "}
+      <input
+        className="search-title"
+        placeholder="Search"
+        type="search"
+        value={searchFilter || ""}
+        onChange={(e) => {
+          setSearchFilter(e.target.value);
+        }}
+      />
+      <ClearSearchInput
+        disabled={!searchFilter}
+        onClick={() => setSearchFilter("")}
+      >
+        <Icon icon="cross-circle" />
+      </ClearSearchInput>
+    </SearchContainer>
   );
 }
 
 /////////////////////////////////////////////////////////////
 function Filters() {
-  const [selectedFilter, setSelectedFilter] = React.useState("");
+  const { slotFilter, setSlotFilter } = useSongList();
   return (
     <div className="filters">
       <span className="title--filter">Filter by slot:</span>
       <FilterItem
-        onClick={() => setSelectedFilter("")}
-        selected={selectedFilter === ""}
+        onClick={() => setSlotFilter("")}
+        selected={slotFilter === ""}
       >
         Any slot
       </FilterItem>
-      <FilterItem
-        onClick={() => setSelectedFilter("1")}
-        selected={selectedFilter === "1"}
-      >
+      <FilterItem onClick={() => setSlotFilter(1)} selected={slotFilter === 1}>
         Slot&nbsp;1
       </FilterItem>
-      <FilterItem
-        onClick={() => setSelectedFilter("2")}
-        selected={selectedFilter === "2"}
-      >
+      <FilterItem onClick={() => setSlotFilter(2)} selected={slotFilter === 2}>
         Slot&nbsp;2
       </FilterItem>
-      <FilterItem
-        onClick={() => setSelectedFilter("3")}
-        selected={selectedFilter === "3"}
-      >
+      <FilterItem onClick={() => setSlotFilter(3)} selected={slotFilter === 3}>
         Slot&nbsp;3
       </FilterItem>
-      <FilterItem
-        onClick={() => setSelectedFilter("4")}
-        selected={selectedFilter === "4"}
-      >
+      <FilterItem onClick={() => setSlotFilter(4)} selected={slotFilter === 4}>
         Slot&nbsp;4
       </FilterItem>
     </div>
@@ -222,7 +231,33 @@ const Controls = styled.div`
   }
 `;
 
-const SearchContainer = styled.div``;
+const ClearSearchInput = styled.span`
+  cursor: ${({ disabled }) => (disabled ? "default" : "pointer")};
+  padding: 0.25rem;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-top: -2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${({ disabled }) => (disabled ? Colors.darktext : Colors.primary)};
+  ${StandardTransition};
+`;
+
+const SearchContainer = styled.div`
+  display: flex;
+  position: relative;
+  align-items: center;
+
+  input {
+    border-width: 0 0 1px 0;
+    &:focus {
+      outline: none;
+    }
+  }
+`;
 
 const LoadingContainer = styled.div`
   display: flex;
