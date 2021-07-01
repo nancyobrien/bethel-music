@@ -8,16 +8,20 @@ import globalStyles from "./styles/global";
 import "./App.css";
 
 import "./styles/main.css";
+import "react-datepicker/dist/react-datepicker.css";
+import Contexts from "contexts";
 
 function App() {
   return (
     <AppContainer className="App">
       <Global styles={globalStyles} />
-      <Header />
-      <ContentContainer>
-        <SongUsage />
-      </ContentContainer>
-      <Footer />
+      <Contexts>
+        <Header />
+        <ContentContainer>
+          <SongUsage />
+        </ContentContainer>
+        <Footer />
+      </Contexts>
     </AppContainer>
   );
 }

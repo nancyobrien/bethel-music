@@ -5,14 +5,14 @@ import Icon from "widgets/Icon";
 
 export default function Footer() {
   return (
-    <FooterContainer class="l-footer">
-      <FooterComponent class="footer">
-        <Feedback class="footer_feedback">
+    <FooterContainer className="l-footer">
+      <FooterComponent className="footer">
+        <Feedback className="footer_feedback">
           <a href="#" id="show-feedback">
             <Icon icon="bubbles" /> Send feedback
           </a>
         </Feedback>
-        <LastUpdatedMsg class="footer_last-updated">
+        <LastUpdatedMsg className="footer_last-updated">
           Last updated on: <span id="lastUpdatedDate"></span>
         </LastUpdatedMsg>
       </FooterComponent>

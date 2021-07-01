@@ -1,6 +1,8 @@
-import React from "react";
-import { SongTableContext } from "components/SongUsage";
-import { useSongData } from "contexts/songs";
+import React, { useState } from "react";
+
+import { useSongData } from "./songs";
+
+export const SongSearchContext = React.createContext();
 
 export const SortFields = {
   TITLE: "title",
@@ -10,20 +12,16 @@ export const SortFields = {
   USE_COUNT: "useCount",
 };
 
-export function useSongList() {
+export default function SongProvider(props) {
   const { plans, plansLoading } = useSongData();
-  const {
-    sortField,
-    sortDirection,
-    setSortField,
-    setSortDirection,
-    slotFilter,
-    setSlotFilter,
-    searchFilter,
-    setSearchFilter,
-    queryStartDate,
-    setQueryStartDate,
-  } = React.useContext(SongTableContext);
+  let sDate = new Date();
+  sDate.setDate(sDate.getDate() - 26 * 7);
+
+  const [sortField, setSortField] = useState(SortFields.LAST_USED);
+  const [sortDirection, setSortDirection] = useState(-1);
+  const [slotFilter, setSlotFilter] = useState("");
+  const [searchFilter, setSearchFilter] = useState();
+  const [queryStartDate, setQueryStartDate] = useState(sDate);
 
   const allSongs = React.useMemo(() => {
     return plans.reduce(
@@ -178,18 +176,35 @@ export function useSongList() {
     sortDirection,
     sortField,
   ]);
+  const values = React.useMemo(
+    () => ({
+      sortField,
+      sortDirection,
+      updateSort,
+      sortedData,
+      slotFilter,
+      setSlotFilter,
+      searchFilter,
+      setSearchFilter,
+      queryStartDate,
+      setQueryStartDate,
+      plansLoading,
+    }),
+    [
+      sortField,
+      sortDirection,
+      updateSort,
+      sortedData,
+      slotFilter,
+      searchFilter,
+      queryStartDate,
+      plansLoading,
+    ]
+  );
 
-  return {
-    sortField,
-    sortDirection,
-    updateSort,
-    sortedData,
-    slotFilter,
-    setSlotFilter,
-    searchFilter,
-    setSearchFilter,
-    queryStartDate,
-    setQueryStartDate,
-    plansLoading,
-  };
+  return <SongSearchContext.Provider {...props} value={values} />;
+}
+
+export function useSongList() {
+  return React.useContext(SongSearchContext);
 }

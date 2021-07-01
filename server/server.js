@@ -70,6 +70,12 @@ var Song = new graphql.GraphQLObjectType({
     archive: { type: graphql.GraphQLBoolean },
     is_christmas: { type: graphql.GraphQLBoolean },
     default_slot: { type: graphql.GraphQLInt },
+    ccliNumber: {
+      type: graphql.GraphQLString,
+      extensions: {
+        joinMonster: { sqlColumn: "ccli_number" },
+      },
+    }
   }),
 });
 
@@ -290,8 +296,8 @@ const QueryRoot = new graphql.GraphQLObjectType({
       extensions: {
         joinMonster: {
           where: (planTable, args, context) => {
-            return `isValid = false ${
-              args.venueID ? `and ${planTable}.venue_id = ${args.venueID}` : ``
+            return ` ${
+              args.venueID ? `${planTable}.venue_id = ${args.venueID}` : ``
             }`;
           },
         },

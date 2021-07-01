@@ -16,7 +16,7 @@ export function SongRow({ song }) {
       </SongTitle>
       <li className="artist" title={song.author}>
         <span className="constraint-width overflow-ellipsis artist-name">
-          {song.artist}
+          {song.author}
         </span>
         <span className="data-label"></span>
       </li>
@@ -32,7 +32,7 @@ export function SongRow({ song }) {
       <li className="useCount" data-sincedate={startDate}>
         <span className="label">{song.useCount}</span>{" "}
         <div className="meter">
-          <span style={{ width: `${song.usePercentage}` }}></span>
+          <span style={{ width: `${song.usePercentage * 100}%` }}></span>
         </div>
         <span
           className="data-label"

@@ -205,14 +205,21 @@ function updateLeaders() {
   });
 }
 
-function getPlanItems() {
-  const query =
-    "Select p.*, v.pco_id as venue_pco_id \
-    from plans p inner join venues v on p.venue_id = v.id \
-    WHERE p.isInvalid = FALSE and p.id NOT IN (SELECT plan_id FROM plan_song) limit 75";
+const formatDate = (dateTicks) => {
+  const dateObj = new Date(dateTicks);
+  return `${dateObj.getMonth() +
+    1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+};
 
-  const now = Date.now();
+function getPlanItems() {
+  const now = new Date();
   const invalidCutoff = now.setDate(now.getDate() - 21);
+  const formattedDate = formatDate(invalidCutoff);
+  console.log(formattedDate);
+  const query = `Select p.*, v.pco_id as venue_pco_id \
+    from plans p inner join venues v on p.venue_id = v.id \
+    WHERE p.isInvalid = FALSE and (p.id NOT IN (SELECT plan_id FROM plan_song) OR p.plan_date > '${formattedDate}' ) limit 75`;
+
   executeQuery(query, [], (err, res) => {
     if (err) {
       // We can just console.log any errors
@@ -251,13 +258,13 @@ function getPlanItems() {
                       song.relationships.song?.data?.id,
                       song.attributes.key_name,
                       song.attributes.description?.substring(0, 500),
-                      idx,
+                      idx + 1,
                       !song.attributes.description,
                     ],
                     (err, res) => {
                       if (err) {
                         // We can just console.log any errors
-                        console.log(err.stack, error.detail, "xx");
+                        console.log(err.stack, err.detail, "xx");
                       } else {
                         console.log("inserted " + song.attributes.title);
                       }

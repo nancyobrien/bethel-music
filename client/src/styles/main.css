@@ -1856,9 +1856,6 @@ li .content_callout h3 {
 
 /* line 83, ../scss/modules/_logo.scss */
 .location-select {
-  position: absolute;
-  top: 0.7rem;
-  right: 3.5rem;
   padding: 0.25rem 1rem 0.25rem 0.5rem;
   font-size: 0.9rem;
   border: 1px solid #cccccc;

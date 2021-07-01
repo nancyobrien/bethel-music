@@ -1,80 +1,47 @@
 import { gql } from "@apollo/client";
 
-const DOCUMENT_LIST_SCHEMA = ` 
-  id
-  title
-  author
-  publishedTime
-  text
- `;
-
-export const DOCUMENTS_QUERY = gql`
-  query GetDocuments {
-    documents {
-      ${DOCUMENT_LIST_SCHEMA}
-    }
-  }
-`;
-
-export const DOCUMENTS_SEARCH_TOTAL_COUNT_QUERY = gql`
-  query SearchTotalDocuments($query: JSON!) {
-    pandion_search(query_body: $query) {
-      hits
-      aggregations
-    }
-  }
-`;
-
-export const DOCUMENTS_SEARCH_QUERY = gql`
-  query SearchDocuments($query: JSON!)  {
-    pandion_search(query_body: $query) {
-      hits
-      document_results {
-        score
-        highlights {
-          field
-          highlights
-        }
-        doc_type
-        doc {
-          ... on Document {
-            ${DOCUMENT_LIST_SCHEMA}
-          }
-        }
-      }
-    aggregations
-    }
-  }
-`;
-
-export const DOCUMENT_QUERY = gql`
-  query GetDocument($id: ID) {
-    document(id: $id) {
+export const VENUES_QUERY = gql`
+  query venues {
+    venues {
       id
-      title
-      author
-      url
-      text
-      contentLink
-      publishedTime
-      updatedTime
-      ingestDatetime
-      sentimentScore
-      entities {
+      name
+    }
+  }
+`;
+
+export const VENUE_PLANS_QUERY = gql`
+  query plans($venueID: ID) {
+    plans(venueID: $venueID) {
+      id
+      pcoID
+      planDate
+      venue {
         id
-        entity
-        group
+        name
+        pcoID
       }
-    }
-  }
-`;
-
-//TODO: switch to favorite query once it is available
-export const FAVORITES_QUERY = gql`
-  query GetFavorites {
-    documents {
-      id
-      title
+      songs {
+        id
+        slot
+        song_key
+        song {
+          id
+          title
+          author
+          ccliNumber
+        }
+        leader {
+          id
+          fullName
+        }
+      }
+      leaders {
+        id
+        leader {
+          id
+          fullName
+        }
+      }
     }
   }
 `;

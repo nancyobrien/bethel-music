@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "@emotion/styled/macro";
+import { useSongData } from "contexts/songs";
 
 export default function Header() {
   return (
@@ -13,24 +14,41 @@ export default function Header() {
 
       <MobileNav className="nav-icon" id="mobile-icon" />
       <NavMenu>
-        <li class="nav_item js-nav-item selected" data-nav="songs">
+        <li className="nav_item js-nav-item selected" data-nav="songs">
           <a>Song Usage</a>
         </li>
-        <li class="nav_item js-nav-item" data-nav="pickSongs">
+        <li className="nav_item js-nav-item" data-nav="pickSongs">
           <a>Pick Songs</a>
         </li>
-        <li class="nav_item js-nav-item" data-nav="export">
+        <li className="nav_item js-nav-item" data-nav="export">
           <a>Export Data (Venues)</a>
         </li>
-        <li class="nav_item ">
+        <li className="nav_item ">
           <a href="/API/CCLIExport.ashx">Export Data</a>
         </li>
       </NavMenu>
-      <VenueSelect class="location-select">
-        <option value="richland">Richland (Live)</option>
-        <option value="pasco">West Pasco</option>
-      </VenueSelect>
+      <VenueSelector />
     </HeaderContainer>
+  );
+}
+
+///////////////////////////////////////////////////////
+function VenueSelector() {
+  const { venues, setVenueID } = useSongData();
+
+  const selectVenue = React.useCallback(
+    (e) => {
+      setVenueID(e.target.value);
+    },
+    [setVenueID]
+  );
+
+  return (
+    <VenueSelect className="location-select" onChange={selectVenue}>
+      {venues.map((v) => (
+        <option key={v.id} value={v.id}>{v.name}</option>
+      ))}
+    </VenueSelect>
   );
 }
 

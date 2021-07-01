@@ -2,18 +2,22 @@ import React, { useState } from "react";
 import styled from "@emotion/styled/macro";
 import Colors from "../styles/colors";
 import SongTable from "./SongTable";
-import { useSongList } from "./SongList/useSongList";
+import { SortFields, useSongList } from "./SongList/useSongList";
 import Icon from "widgets/Icon";
 import { StandardTransition } from "styles/global";
+import ReactDatePicker from "react-datepicker";
 
 export const SongTableContext = React.createContext();
 
 export default function SongUsage() {
-  const [sortField, setSortField] = useState("lastUsed");
+  let sDate = new Date();
+  sDate.setDate(sDate.getDate() - 26 * 7);
+
+  const [sortField, setSortField] = useState(SortFields.LAST_USED);
   const [sortDirection, setSortDirection] = useState(-1);
   const [slotFilter, setSlotFilter] = useState("");
   const [searchFilter, setSearchFilter] = useState();
-  const [queryStartDate, setQueryStartDate] = useState("1/1/2000");
+  const [queryStartDate, setQueryStartDate] = useState(sDate);
 
   const contextValues = React.useMemo(
     () => ({
@@ -30,23 +34,31 @@ export default function SongUsage() {
     }),
     [queryStartDate, searchFilter, slotFilter, sortDirection, sortField]
   );
-  const dataLoaded = true;
+
   return (
     <SongTableContext.Provider value={contextValues}>
       <div className="content-container" id="tab-songs">
         <Controls>
           <SearchBox />
-          <div className="config">
-            <input type="text" className="datepicker" id="startdatepicker" />
-          </div>
+          <StartDate />
           <Filters />
         </Controls>
-
-        {!dataLoaded && <Loading />}
 
         <SongTable />
       </div>
     </SongTableContext.Provider>
+  );
+}
+
+function StartDate() {
+  const { queryStartDate, setQueryStartDate } = useSongList();
+  return (
+    <div>
+      <ReactDatePicker
+        selected={queryStartDate}
+        onChange={(date) => setQueryStartDate(date)}
+      />
+    </div>
   );
 }
 
@@ -100,15 +112,6 @@ function Filters() {
         Slot&nbsp;4
       </FilterItem>
     </div>
-  );
-}
-/////////////////////////////////////////////////////////////
-function Loading() {
-  return (
-    <LoadingContainer>
-      <span>Loading songs</span>
-      <span className="loader-image"></span>
-    </LoadingContainer>
   );
 }
 
@@ -256,31 +259,6 @@ const SearchContainer = styled.div`
     &:focus {
       outline: none;
     }
-  }
-`;
-
-const LoadingContainer = styled.div`
-  display: flex;
-  span {
-    line-height: 3em;
-    vertical-align: top;
-    font-size: 126%;
-    margin-left: 1em;
-  }
-  .loader-image {
-    width: 4em;
-    height: 3em;
-    /*  display: inline-block;
-    width: 2.5em;
-    height: 0.7em;
-    background-position: 0;
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-image: inline-image("ellipsis.gif"); */
-  }
-
-  @media (min-width: 800px) {
-    min-width: 600px;
   }
 `;
 
