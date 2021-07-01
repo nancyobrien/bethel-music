@@ -2,9 +2,13 @@ import React from "react";
 import styled from "@emotion/styled/macro";
 import Icon from "widgets/Icon";
 import Colors from "styles/colors";
+import { useSongHistory, useSongList } from "contexts/songStats";
 
 export function SongRow({ song }) {
-  const startDate = "need start date";
+  const { queryStartDate } = useSongList();
+  const songHistory = useSongHistory(song.id);
+
+  const startDate = queryStartDate;
   return (
     <ul className="data-row">
       <SongTitle className="title" data-songid={song.id}>
@@ -12,6 +16,13 @@ export function SongRow({ song }) {
         <span className="ccliNumber">({song.ccliNumber})</span>{" "}
         <SongTip>
           <Icon icon="ellipsis-h" />
+          <SongHistory>
+            {songHistory.map((s, idx) => (
+              <div key={idx}>
+                {s.displayDate} - {s.leaderName || <em>Unknown</em>} [{s.key}]
+              </div>
+            ))}
+          </SongHistory>
         </SongTip>
       </SongTitle>
       <li className="artist" title={song.author}>
@@ -58,6 +69,24 @@ const SongTitle = styled.li`
   }
 `;
 
+const SongHistory = styled.div`
+  position: absolute;
+  top: -1rem;
+  left: 2rem;
+  display: none;
+  background: white;
+  color: ${Colors.darktext};
+  z-index: 100;
+  padding: 1rem;
+  border-radius: 4px;
+  border: 1px solid ${Colors.primary};
+  font-weight: normal;
+  font-size: 0.85rem;
+  > div {
+    white-space: nowrap;
+  }
+`;
+
 const SongTip = styled.span`
   cursor: help;
   margin-left: 0.5rem !important;
@@ -68,4 +97,10 @@ const SongTip = styled.span`
   align-items: center;
   justify-content: center;
   color: white;
+  position: relative;
+  &:hover {
+    ${SongHistory} {
+      display: block;
+    }
+  }
 `;

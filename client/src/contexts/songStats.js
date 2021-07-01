@@ -30,9 +30,11 @@ export default function SongProvider(props) {
           b.songs.map((s) => ({
             ...s.song,
             slot: s.slot,
+            displayDate: formatDate(b.planDate),
             planDate: b.planDate,
             leaderID: s.leader?.id,
-            key: b.song_key,
+            leaderName: s.leader?.fullName,
+            key: s.song_key,
           }))
         ),
       []
@@ -42,13 +44,6 @@ export default function SongProvider(props) {
   const songsForDateRange = React.useMemo(() => {
     return allSongs.filter((s) => s.planDate >= queryStartDate);
   }, [allSongs, queryStartDate]);
-
-  const formatDate = (dateTicks) => {
-    const dateObj = new Date(dateTicks);
-    return `${
-      dateObj.getMonth() + 1
-    }/${dateObj.getDate()}/${dateObj.getFullYear()}`;
-  };
 
   const songMetrics = React.useCallback((filteredSongs) => {
     const now = Date.now();
@@ -125,7 +120,7 @@ export default function SongProvider(props) {
     );
     if (!!slotFilter) {
       filteredSongs = filteredSongs.filter(
-        (s) => s[SortFields.PREFERRED_SLOT] === slotFilter
+        (s) => s[SortFields.PREFERRED_SLOT] === slotFilter.toString()
       );
     }
 
@@ -176,6 +171,14 @@ export default function SongProvider(props) {
     sortDirection,
     sortField,
   ]);
+
+  const getSongHistory = React.useCallback(
+    (songID) => {
+      return songsForDateRange.filter((s) => s.id === songID).sort((a,b) => b.planDate - a.planDate);
+    },
+    [songsForDateRange]
+  );
+
   const values = React.useMemo(
     () => ({
       sortField,
@@ -189,6 +192,7 @@ export default function SongProvider(props) {
       queryStartDate,
       setQueryStartDate,
       plansLoading,
+      getSongHistory,
     }),
     [
       sortField,
@@ -199,6 +203,7 @@ export default function SongProvider(props) {
       searchFilter,
       queryStartDate,
       plansLoading,
+      getSongHistory,
     ]
   );
 
@@ -208,3 +213,16 @@ export default function SongProvider(props) {
 export function useSongList() {
   return React.useContext(SongSearchContext);
 }
+
+export function useSongHistory(songID) {
+  const { getSongHistory } = React.useContext(SongSearchContext);
+
+  return getSongHistory(songID);
+}
+
+export const formatDate = (dateTicks) => {
+  const dateObj = new Date(dateTicks);
+  return `${
+    dateObj.getMonth() + 1
+  }/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+};

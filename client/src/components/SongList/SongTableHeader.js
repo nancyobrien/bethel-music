@@ -1,10 +1,12 @@
 import React from "react";
 import styled from "@emotion/styled/macro";
 import { Icon } from "widgets/Icon";
+import { formatDate, SortFields, useSongList } from "contexts/songStats";
 
-import { SortFields, useSongList } from "./useSongList";
+ 
 
 export function SongTableHeader() {
+  const { queryStartDate } = useSongList();
   return (
     <div className="data-head">
       <ul className="data-header-list drop-list zg-ul-select">
@@ -21,7 +23,7 @@ export function SongTableHeader() {
         <SongHeaderItem fieldName={SortFields.USE_COUNT}>
           Number of Times Played{" "}
           <div className="timestamp">
-            (since <span className="dataStartDate">1/1/2020</span>)
+            (since <span className="dataStartDate">{formatDate(queryStartDate)}</span>)
           </div>
         </SongHeaderItem>
       </ul>
@@ -39,7 +41,7 @@ export function SongTableHeader() {
         <SongHeaderItem fieldName={SortFields.USE_COUNT}>
           Number of Times Played{" "}
           <div className="timestamp">
-            (since <span className="dataStartDate">1/1/2020</span>)
+            (since <span className="dataStartDate">{formatDate(queryStartDate)}</span>)
           </div>
         </SongHeaderItem>
       </ul>

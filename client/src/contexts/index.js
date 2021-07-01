@@ -1,10 +1,11 @@
 import React from "react";
 
 import SongsData from "./songs";
+import SongsStats from "./songStats";
 
 // Add new context providers here, and they will be composed together in render
 // The first entry in the array will be the outermost context
-const providers = [SongsData];
+const providers = [SongsData, SongsStats];
 
 export default function Contexts({ children }) {
   const reversedProviders = [...providers].reverse(); //don't mutate the original, or it can flop back to unreversed

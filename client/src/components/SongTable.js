@@ -2,8 +2,7 @@ import React from "react";
 import styled from "@emotion/styled/macro";
 import { SongRow } from "./SongList/SongRow";
 import { SongTableHeader } from "./SongList/SongTableHeader";
-
-import { useSongList } from "./SongList/useSongList";
+import { useSongList } from "contexts/songStats";
 
 export default function SongTable() {
   const { sortedData, plansLoading } = useSongList();

@@ -2,51 +2,25 @@ import React, { useState } from "react";
 import styled from "@emotion/styled/macro";
 import Colors from "../styles/colors";
 import SongTable from "./SongTable";
-import { SortFields, useSongList } from "./SongList/useSongList";
+
 import Icon from "widgets/Icon";
 import { StandardTransition } from "styles/global";
 import ReactDatePicker from "react-datepicker";
+import { useSongList } from "contexts/songStats";
 
 export const SongTableContext = React.createContext();
 
 export default function SongUsage() {
-  let sDate = new Date();
-  sDate.setDate(sDate.getDate() - 26 * 7);
-
-  const [sortField, setSortField] = useState(SortFields.LAST_USED);
-  const [sortDirection, setSortDirection] = useState(-1);
-  const [slotFilter, setSlotFilter] = useState("");
-  const [searchFilter, setSearchFilter] = useState();
-  const [queryStartDate, setQueryStartDate] = useState(sDate);
-
-  const contextValues = React.useMemo(
-    () => ({
-      sortField,
-      sortDirection,
-      setSortField,
-      setSortDirection,
-      slotFilter,
-      setSlotFilter,
-      searchFilter,
-      setSearchFilter,
-      queryStartDate,
-      setQueryStartDate,
-    }),
-    [queryStartDate, searchFilter, slotFilter, sortDirection, sortField]
-  );
-
   return (
-    <SongTableContext.Provider value={contextValues}>
-      <div className="content-container" id="tab-songs">
-        <Controls>
-          <SearchBox />
-          <StartDate />
-          <Filters />
-        </Controls>
+    <div className="content-container" id="tab-songs">
+      <Controls>
+        <SearchBox />
+        <StartDate />
+        <Filters />
+      </Controls>
 
-        <SongTable />
-      </div>
-    </SongTableContext.Provider>
+      <SongTable />
+    </div>
   );
 }
 

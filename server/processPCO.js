@@ -508,3 +508,18 @@ module.exports = {
     return findSongLeaders();
   },
 };
+
+
+//TODO: if a song appears multiple times in one service, only count it once. See Pasco 1/24/21 for example
+// make sure to properly adjust the slots for other songs after
+
+//DOn't requery for leaders we have already pulled, just update the song
+
+// stop duplicate pco_id for plan_songs error
+
+//Allow for marking xmas songs and hymn.
+//Allow for theme tagging and scripture refs
+
+//Export to excel
+
+//Printing cleanly
