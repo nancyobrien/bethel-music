@@ -2,13 +2,13 @@ import React from "react";
 import styled from "@emotion/styled/macro";
 import Icon from "widgets/Icon";
 import Colors from "styles/colors";
-import { useSongHistory, useSongList } from "contexts/songStats";
+import { formatDate, useSongHistory, useSongList } from "contexts/songStats";
 
 export function SongRow({ song }) {
   const { queryStartDate } = useSongList();
   const songHistory = useSongHistory(song.id);
 
-  const startDate = queryStartDate;
+  const startDate = formatDate(queryStartDate);
   return (
     <ul className="data-row">
       <SongTitle className="title" data-songid={song.id}>

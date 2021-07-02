@@ -128,10 +128,10 @@ export default function SongProvider(props) {
       filteredSongs = filteredSongs.filter(
         (s) =>
           s[SortFields.TITLE]
-            .toLowerCase()
+            ?.toLowerCase()
             .includes(searchFilter.toLowerCase()) ||
           s[SortFields.ARTIST]
-            .toLowerCase()
+            ?.toLowerCase()
             .includes(searchFilter.toLowerCase())
       );
     }
