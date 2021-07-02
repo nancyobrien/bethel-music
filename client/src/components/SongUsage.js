@@ -333,6 +333,12 @@ const DownloadButton = styled.span`
   border: 1px solid #ccc;
   margin-right: 1rem;
   color: ${Colors.primary};
+  ${StandardTransition};
+
+  &:hover {
+    border-color: ${Colors.primary};
+    background-color: #fefefe;
+  }
 
   svg {
     margin-top: -0.3rem;
