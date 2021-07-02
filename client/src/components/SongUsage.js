@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import styled from "@emotion/styled/macro";
 import Colors from "../styles/colors";
 import SongTable from "./SongTable";
@@ -6,13 +6,14 @@ import SongTable from "./SongTable";
 import Icon from "widgets/Icon";
 import { StandardTransition } from "styles/global";
 import ReactDatePicker from "react-datepicker";
-import { useSongList } from "contexts/songStats";
+import { formatDate, useSongList } from "contexts/songStats";
+import { useSongData } from "contexts/songs";
 
 export const SongTableContext = React.createContext();
 
 export default function SongUsage() {
   return (
-    <div className="content-container" id="tab-songs">
+    <ContentContainer>
       <Controls>
         <SearchBox />
         <StartDate />
@@ -20,9 +21,69 @@ export default function SongUsage() {
       </Controls>
 
       <SongTable />
-    </div>
+    </ContentContainer>
   );
 }
+
+/////////////////////////////////////////////////////////////
+
+function DownloadData() {
+  const { sortedData, plansLoading, queryStartDate } = useSongList();
+  const { currentVenue } = useSongData();
+  const download_csv = (csv, filename) => {
+    var csvFile;
+    var downloadLink;
+
+    // CSV FILE
+    csvFile = new Blob([csv], { type: "text/csv" });
+
+    // Download link
+    downloadLink = document.createElement("a");
+
+    // File name
+    downloadLink.download = filename;
+
+    // We have to create a link to the file
+    downloadLink.href = window.URL.createObjectURL(csvFile);
+
+    // Make sure that the link is not displayed
+    downloadLink.style.display = "none";
+
+    // Add the link to your DOM
+    document.body.appendChild(downloadLink);
+
+    // Lanzamos
+    downloadLink.click();
+  };
+
+  const export_table_to_csv = () => {
+    var rows = [
+      `Title,CCLI #, Artist, Last Use, Last Use weeks, Most Common Slot, Number of Times Played since ${formatDate(
+        queryStartDate
+      )}`,
+    ];
+
+    sortedData.forEach((song) => {
+      rows.push(
+        `"${song.title}",${song.ccliNumber},"${song.author}",${song.lastUsed},${song.lastUsedWeeks},${song.preferredSlot},${song.useCount},`
+      );
+    });
+
+    const fileName = `${currentVenue.name}-${formatDate(
+      queryStartDate,
+      "-"
+    )}-thru-${formatDate(Date.now(), "-")}.csv`;
+    // Download CSV
+    download_csv(rows.join("\n"), fileName);
+  };
+
+  return (
+    <DownloadButton disabled={plansLoading} onClick={export_table_to_csv}>
+      <Icon icon="download2" />
+    </DownloadButton>
+  );
+}
+/////////////////////////////////////////////////////////////
 
 function StartDate() {
   const { queryStartDate, setQueryStartDate } = useSongList();
@@ -41,6 +102,7 @@ function SearchBox() {
   const { searchFilter, setSearchFilter } = useSongList();
   return (
     <SearchContainer>
+      <DownloadData />
       <label>Search by Title or Artist:</label>{" "}
       <input
         className="search-title"
@@ -90,6 +152,10 @@ function Filters() {
 }
 
 /////////////////////////////////////////////////////////////
+
+const ContentContainer = styled.div`
+  display: block;
+`;
 
 const Controls = styled.div`
   font-weight: bold;
@@ -253,5 +319,22 @@ const FilterItem = styled.span`
   &:hover {
     background-color: ${({ selected }) =>
       selected ? Colors.primary : Colors.subtle};
+  }
+`;
+
+const DownloadButton = styled.span`
+  padding: 0.5rem;
+  border-radius: 100%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #ccc;
+  margin-right: 1rem;
+  color: ${Colors.primary};
+
+  svg {
+    margin-top: -0.3rem;
   }
 `;

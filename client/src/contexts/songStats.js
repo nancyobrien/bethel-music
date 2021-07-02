@@ -174,7 +174,9 @@ export default function SongProvider(props) {
 
   const getSongHistory = React.useCallback(
     (songID) => {
-      return songsForDateRange.filter((s) => s.id === songID).sort((a,b) => b.planDate - a.planDate);
+      return songsForDateRange
+        .filter((s) => s.id === songID)
+        .sort((a, b) => b.planDate - a.planDate);
     },
     [songsForDateRange]
   );
@@ -220,9 +222,9 @@ export function useSongHistory(songID) {
   return getSongHistory(songID);
 }
 
-export const formatDate = (dateTicks) => {
+export const formatDate = (dateTicks, separator = "/") => {
   const dateObj = new Date(dateTicks);
   return `${
     dateObj.getMonth() + 1
-  }/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+  }${separator}${dateObj.getDate()}${separator}${dateObj.getFullYear()}`;
 };

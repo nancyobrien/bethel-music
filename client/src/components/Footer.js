@@ -1,18 +1,19 @@
 import React from "react";
 import styled from "@emotion/styled/macro";
-import Colors from "../styles/colors";
+
 import Icon from "widgets/Icon";
+import Colors from "styles/colors";
 
 export default function Footer() {
   return (
-    <FooterContainer className="l-footer">
-      <FooterComponent className="footer">
-        <Feedback className="footer_feedback">
-          <a href="#" id="show-feedback">
+    <FooterContainer>
+      <FooterComponent>
+        <Feedback>
+          <span>
             <Icon icon="bubbles" /> Send feedback
-          </a>
+          </span>
         </Feedback>
-        <LastUpdatedMsg className="footer_last-updated">
+        <LastUpdatedMsg>
           Last updated on: <span id="lastUpdatedDate"></span>
         </LastUpdatedMsg>
       </FooterComponent>
@@ -40,7 +41,8 @@ const Feedback = styled.div`
   font-size: 1em;
   margin-bottom: 0.5em;
 
-  a {
+  span {
+    cursor: pointer;
     color: ${Colors.primary};
     text-decoration: none;
     padding: 0.5em 1em;

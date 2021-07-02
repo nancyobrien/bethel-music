@@ -1,6 +1,8 @@
 import React from "react";
 import styled from "@emotion/styled/macro";
 import { useSongData } from "contexts/songs";
+import Colors from "styles/colors";
+import { StandardTransition } from "styles/global";
 
 export default function Header() {
   return (
@@ -14,18 +16,10 @@ export default function Header() {
 
       <MobileNav className="nav-icon" id="mobile-icon" />
       <NavMenu>
-        <li className="nav_item js-nav-item selected" data-nav="songs">
-          <a>Song Usage</a>
-        </li>
-        <li className="nav_item js-nav-item" data-nav="pickSongs">
-          <a>Pick Songs</a>
-        </li>
-        <li className="nav_item js-nav-item" data-nav="export">
-          <a>Export Data (Venues)</a>
-        </li>
-        <li className="nav_item ">
-          <a href="/API/CCLIExport.ashx">Export Data</a>
-        </li>
+        <NavItem className="selected">Song Usage</NavItem>
+        <NavItem>Pick Songs</NavItem>
+        <NavItem>Export Data (Venues)</NavItem>
+        <NavItem>Export Data</NavItem>
       </NavMenu>
       <VenueSelector />
     </HeaderContainer>
@@ -46,7 +40,9 @@ function VenueSelector() {
   return (
     <VenueSelect className="location-select" onChange={selectVenue}>
       {venues.map((v) => (
-        <option key={v.id} value={v.id}>{v.name}</option>
+        <option key={v.id} value={v.id}>
+          {v.name}
+        </option>
       ))}
     </VenueSelect>
   );
@@ -121,5 +117,47 @@ const VenueSelect = styled.select`
   @media (min-width: 400px) {
     font-size: 1rem;
     padding: 0.5rem 1rem 0.5rem 0.5rem;
+  }
+`;
+
+const NavItem = styled.li`
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: Helvetica, Arial, sans-serif;
+  font-weight: bold;
+  color: #666;
+  font-size: 12px;
+  display: block;
+  padding: 0.5em 1em;
+  border-bottom: 2px solid transparent;
+  margin: 0 0.25em;
+  width: 100%;
+  ${StandardTransition};
+
+  &:hover {
+    border-bottom: 2px solid #ccc;
+  }
+
+  &.selected {
+    background: ${Colors.primary};
+    color: white;
+    border-bottom: 2px solid ${Colors.primary};
+
+    @media (min-width: 800px) {
+      color: #666;
+      background: transparent;
+    }
+  }
+
+  @media (min-width: 800px) {
+    border-bottom: 2px solid #fff;
+    width: auto;
+    height: auto;
+    display: table-cell;
+    vertical-align: bottom;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 17px;
+    padding: 0.5em 1.5em;
   }
 `;

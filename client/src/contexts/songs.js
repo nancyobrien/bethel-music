@@ -30,6 +30,7 @@ export default function SongProvider(props) {
       setVenueID,
       venuesLoading,
       plansLoading,
+      currentVenue: venuesData?.venues?.find((v) => v.id === venueID),
       venues: venuesData?.venues || [],
       plans: plansData?.plans || [],
     }),
