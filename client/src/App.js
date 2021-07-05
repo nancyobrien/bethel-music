@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "@emotion/styled/macro";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import { Global } from "@emotion/react";
 import Header from "./components/Header";
 import SongUsage from "./components/SongUsage";
@@ -10,17 +11,27 @@ import "./App.css";
 import "./styles/main.css";
 import "react-datepicker/dist/react-datepicker.css";
 import Contexts from "contexts";
+import Plans from "components/Plans";
 
 function App() {
   return (
     <AppContainer className="App">
       <Global styles={globalStyles} />
       <Contexts>
-        <Header />
-        <ContentContainer>
-          <SongUsage />
-        </ContentContainer>
-        <Footer />
+        <Router>
+          <Header />
+          <ContentContainer>
+            <Switch>
+              <Route exact path="/">
+                <SongUsage />
+              </Route>
+              <Route path="/plans">
+                <Plans />
+              </Route>
+            </Switch>
+          </ContentContainer>
+          <Footer />
+        </Router>
       </Contexts>
     </AppContainer>
   );

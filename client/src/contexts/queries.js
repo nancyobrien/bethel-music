@@ -10,11 +10,13 @@ export const VENUES_QUERY = gql`
 `;
 
 export const VENUE_PLANS_QUERY = gql`
-  query plans($venueID: ID) {
+  query plans($venueID: ID!) {
     plans(venueID: $venueID) {
       id
       pcoID
+      url
       planDate
+      archived
       venue {
         id
         name
@@ -24,6 +26,7 @@ export const VENUE_PLANS_QUERY = gql`
         id
         slot
         song_key
+        archived
         song {
           id
           title

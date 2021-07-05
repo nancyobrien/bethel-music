@@ -1,7 +1,8 @@
 import React from "react";
-import { useQuery } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client";
 
 import { VENUE_PLANS_QUERY, VENUES_QUERY } from "./queries";
+import { ARCHIVE_PLAN, ARCHIVE_SONG } from "./mutations";
 
 export const SongDataContext = React.createContext();
 
@@ -24,17 +25,30 @@ export default function SongProvider(props) {
     }
   }, [venueID, venuesData?.venues]);
 
+  const [archivePlan] = useMutation(ARCHIVE_PLAN);
+  const [archiveSong] = useMutation(ARCHIVE_SONG);
+
   const values = React.useMemo(
     () => ({
       venueID,
       setVenueID,
       venuesLoading,
       plansLoading,
-      currentVenue: venuesData?.venues?.find((v) => v.id === venueID),
+      currentVenue: venuesData?.venues?.find((v) => v.id === venueID * 1),
       venues: venuesData?.venues || [],
       plans: plansData?.plans || [],
+      archivePlan,
+      archiveSong,
     }),
-    [venueID, venuesLoading, plansLoading, venuesData?.venues, plansData?.plans]
+    [
+      venueID,
+      venuesLoading,
+      plansLoading,
+      venuesData?.venues,
+      plansData?.plans,
+      archivePlan,
+      archiveSong,
+    ]
   );
 
   return <SongDataContext.Provider {...props} value={values} />;

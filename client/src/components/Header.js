@@ -3,6 +3,7 @@ import styled from "@emotion/styled/macro";
 import { useSongData } from "contexts/songs";
 import Colors from "styles/colors";
 import { StandardTransition } from "styles/global";
+import { NavLink } from "react-router-dom";
 
 export default function Header() {
   return (
@@ -16,10 +17,10 @@ export default function Header() {
 
       <MobileNav className="nav-icon" id="mobile-icon" />
       <NavMenu>
-        <NavItem className="selected">Song Usage</NavItem>
-        <NavItem>Pick Songs</NavItem>
-        <NavItem>Export Data (Venues)</NavItem>
-        <NavItem>Export Data</NavItem>
+        <NavItem to="/" exact>Song Usage</NavItem>
+        <NavItem to="/plans">View Plans</NavItem>
+        <NavItem to="/pickSongs">Pick Songs</NavItem>
+        <NavItem to="/export">Export Data</NavItem>
       </NavMenu>
       <VenueSelector />
     </HeaderContainer>
@@ -80,7 +81,7 @@ const MobileNav = styled.span`
   }
 `;
 
-const NavMenu = styled.ul`
+const NavMenu = styled.div`
   display: none;
   overflow: hidden;
   *zoom: 1;
@@ -120,7 +121,7 @@ const VenueSelect = styled.select`
   }
 `;
 
-const NavItem = styled.li`
+const NavItem = styled(NavLink)`
   text-transform: uppercase;
   cursor: pointer;
   font-family: Helvetica, Arial, sans-serif;
@@ -132,13 +133,14 @@ const NavItem = styled.li`
   border-bottom: 2px solid transparent;
   margin: 0 0.25em;
   width: 100%;
+  text-decoration: none;
   ${StandardTransition};
 
   &:hover {
     border-bottom: 2px solid #ccc;
   }
 
-  &.selected {
+  &.active {
     background: ${Colors.primary};
     color: white;
     border-bottom: 2px solid ${Colors.primary};

@@ -75,7 +75,7 @@ var Song = new graphql.GraphQLObjectType({
       extensions: {
         joinMonster: { sqlColumn: "ccli_number" },
       },
-    }
+    },
   }),
 });
 
@@ -155,6 +155,7 @@ var PlanSong = new graphql.GraphQLObjectType({
   name: "PlanSong",
   fields: () => ({
     id: { type: graphql.GraphQLInt },
+    archived: { type: graphql.GraphQLBoolean },
     pcoID: {
       type: graphql.GraphQLString,
       extensions: {
@@ -205,6 +206,8 @@ var Plan = new graphql.GraphQLObjectType({
 
   fields: () => ({
     id: { type: graphql.GraphQLInt },
+    url: { type: graphql.GraphQLString },
+    archived: { type: graphql.GraphQLBoolean },
     planDate: {
       type: graphql.GraphQLFloat,
       extensions: {
@@ -292,7 +295,7 @@ const QueryRoot = new graphql.GraphQLObjectType({
     },
     plans: {
       type: new graphql.GraphQLList(Plan),
-      args: { venueID: { type: graphql.GraphQLID } },
+      args: { venueID: { type: graphql.GraphQLNonNull(graphql.GraphQLID) } },
       extensions: {
         joinMonster: {
           where: (planTable, args, context) => {
@@ -311,7 +314,11 @@ const QueryRoot = new graphql.GraphQLObjectType({
     plan: {
       type: Plan,
       args: { id: { type: graphql.GraphQLNonNull(graphql.GraphQLInt) } },
-      where: (planTable, args, context) => `${planTable}.id = ${args.id}`,
+      extensions: {
+        joinMonster: {
+          where: (planTable, args, context) => `${planTable}.id = ${args.id}`,
+        },
+      },
       resolve: (parent, args, context, resolveInfo) => {
         return joinMonster(resolveInfo, {}, (sql) => {
           return client.query(sql);
@@ -325,6 +332,44 @@ const QueryRoot = new graphql.GraphQLObjectType({
 const MutationRoot = new graphql.GraphQLObjectType({
   name: "Mutation",
   fields: () => ({
+    archivePlanSong: {
+      type: PlanSong,
+      args: {
+        id: { type: graphql.GraphQLNonNull(graphql.GraphQLInt) },
+        archived: { type: graphql.GraphQLBoolean, defaultValue: true },
+      },
+      resolve: async (parent, args, context, resolveInfo) => {
+        try {
+          return (
+            await client.query(
+              "UPDATE plan_song set archived = $2 where id = $1 RETURNING *",
+              [args.id, args.archived]
+            )
+          ).rows[0];
+        } catch (err) {
+          throw new Error("Failed to archive plan song");
+        }
+      },
+    },
+    archivePlan: {
+      type: Plan,
+      args: {
+        id: { type: graphql.GraphQLNonNull(graphql.GraphQLInt) },
+        archived: { type: graphql.GraphQLBoolean, defaultValue: true },
+      },
+      resolve: async (parent, args, context, resolveInfo) => {
+        try {
+          return (
+            await client.query(
+              "UPDATE plans set archived = $2 where id = $1 RETURNING *",
+              [args.id, args.archived]
+            )
+          ).rows[0];
+        } catch (err) {
+          throw new Error("Failed to archive plan" + err.toString());
+        }
+      },
+    },
     addVenue: {
       type: Venue,
       args: {
