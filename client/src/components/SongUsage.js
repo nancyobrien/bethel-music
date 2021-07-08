@@ -87,9 +87,14 @@ function DownloadData() {
 
 function StartDate() {
   const { queryStartDate, setQueryStartDate } = useSongList();
+  const isSunday = (date) => {
+    const day = date.getDay();
+    return day === 0;
+  };
   return (
     <div>
       <ReactDatePicker
+        filterDate={isSunday}
         selected={queryStartDate}
         onChange={(date) => setQueryStartDate(date)}
       />

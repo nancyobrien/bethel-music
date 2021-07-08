@@ -4,6 +4,7 @@ export const VENUES_QUERY = gql`
   query venues {
     venues {
       id
+      pcoID
       name
     }
   }

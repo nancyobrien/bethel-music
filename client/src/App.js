@@ -25,7 +25,7 @@ function App() {
               <Route exact path="/">
                 <SongUsage />
               </Route>
-              <Route path="/plans">
+              <Route path="/plans/:planDate?">
                 <Plans />
               </Route>
             </Switch>

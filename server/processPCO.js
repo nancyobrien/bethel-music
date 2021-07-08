@@ -51,7 +51,11 @@ function getPlans(venue, recordsPerPage = 100) {
       console.log("plans fetch to ", newOffset, " for ", venue.name);
     })
     .catch((err) => {
-      console.log("Error: ", err.message, err.response.data.errors[0].detail);
+      console.log(
+        "Get Plans Error: ",
+        err.message,
+        err.response.data.errors[0].detail
+      );
     });
 }
 
@@ -182,7 +186,11 @@ function updateLeader(pco_id) {
       );
     })
     .catch((err) => {
-      console.log("Error: ", err.message, err.response.data.errors[0].detail);
+      console.log(
+        "Stub Leader Error: ",
+        err.message,
+        err.response.data.errors[0].detail
+      );
     });
 }
 
@@ -211,11 +219,72 @@ const formatDate = (dateTicks) => {
     1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
 };
 
+function getItemsForPlan(venue_pco_id, pco_id) {
+  const planDate = new Date("1/1/2025");
+  const pcoAPIQuery = `https://api.planningcenteronline.com/services/v2/service_types/${venue_pco_id}/plans/${pco_id}/items`;
+
+  get(pcoAPIQuery)
+    .then((res) => {
+      const songs = res.data.data.filter(
+        (plan_song) =>
+          !!plan_song.relationships.song?.data?.id &&
+          plan_song.relationships.song?.data?.id !== "0"
+      );
+
+      if (songs.length > 0) {
+        const insertQuery =
+          "INSERT INTO plan_song (pco_id, url, plan_id, song_id, song_key, description, slot, no_leader_found) \
+      select $1, $2, (select p.id from plans p where p.pco_id = $3), s.id, $5, $6, $7, $8 from songs s where s.pco_id = $4";
+
+        const selectQuery = "Select pco_id from plan_song";
+
+        executeQuery(selectQuery, [], (err, res_pcoIDs) => {
+          if (err) {
+            // We can just console.log any errors
+            console.log(err.stack);
+          } else {
+            const pcoIDs = res_pcoIDs.rows?.map((r) => r.pco_id);
+            songs.forEach((song, idx) => {
+              if (!pcoIDs.find((r) => r === song.id)) {
+                stubSong(song);
+                executeQuery(
+                  insertQuery,
+                  [
+                    song.id,
+                    song.links.self,
+                    pco_id,
+                    song.relationships.song?.data?.id,
+                    song.attributes.key_name,
+                    song.attributes.description?.substring(0, 500),
+                    idx + 1,
+                    !song.attributes.description,
+                  ],
+                  (err, res) => {
+                    if (err) {
+                      // We can just console.log any errors
+                      console.log(err.stack, err.detail, "xx");
+                    } else {
+                      console.log("inserted " + song.attributes.title);
+                    }
+                  }
+                );
+              }
+            });
+          }
+        });
+      }
+    })
+    .catch((err) => {
+      console.log("getItemsForPlan Error: ", err.message, pcoAPIQuery);
+      return false;
+    });
+  return true;
+}
+
 function getPlanItems() {
   const now = new Date();
   const invalidCutoff = now.setDate(now.getDate() - 21);
   const formattedDate = formatDate(invalidCutoff);
-  console.log(formattedDate);
   const query = `Select p.*, v.pco_id as venue_pco_id \
     from plans p inner join venues v on p.venue_id = v.id \
     WHERE p.isInvalid = FALSE and (p.id NOT IN (SELECT plan_id FROM plan_song) OR p.plan_date > '${formattedDate}' ) limit 75`;
@@ -228,6 +297,7 @@ function getPlanItems() {
       if (res.rows.length) {
         res.rows.every((plan) => {
           const planDate = new Date(plan.plan_date);
+          console.log("Gettings data for date: ", formatDate(planDate));
           get(
             `https://api.planningcenteronline.com/services/v2/service_types/${plan.venue_pco_id}/plans/${plan.pco_id}/items`
           )
@@ -243,40 +313,53 @@ function getPlanItems() {
                   "update plans set isInvalid = TRUE where id = $1";
                 executeQuery(invalidUpdate, [plan.id], () => {});
               } else {
-                const query =
+                const insertQuery =
                   "INSERT INTO plan_song (pco_id, url, plan_id, song_id, song_key, description, slot, no_leader_found) \
               select $1, $2, $3, s.id, $5, $6, $7, $8 from songs s where s.pco_id = $4";
 
-                songs.forEach((song, idx) => {
-                  stubSong(song);
-                  executeQuery(
-                    query,
-                    [
-                      song.id,
-                      song.links.self,
-                      plan.id,
-                      song.relationships.song?.data?.id,
-                      song.attributes.key_name,
-                      song.attributes.description?.substring(0, 500),
-                      idx + 1,
-                      !song.attributes.description,
-                    ],
-                    (err, res) => {
-                      if (err) {
-                        // We can just console.log any errors
-                        console.log(err.stack, err.detail, "xx");
-                      } else {
-                        console.log("inserted " + song.attributes.title);
+                const selectQuery = "Select pco_id from plan_song";
+
+                executeQuery(selectQuery, [], (err, res_pcoIDs) => {
+                  if (err) {
+                    // We can just console.log any errors
+                    console.log(err.stack);
+                  } else {
+                    const pcoIDs = res_pcoIDs.rows?.map((r) => r.pco_id);
+                    songs.forEach((song, idx) => {
+                      if (!pcoIDs.find((r) => r === song.id)) {
+                        stubSong(song);
+                        executeQuery(
+                          insertQuery,
+                          [
+                            song.id,
+                            song.links.self,
+                            plan.id,
+                            song.relationships.song?.data?.id,
+                            song.attributes.key_name,
+                            song.attributes.description?.substring(0, 500),
+                            idx + 1,
+                            !song.attributes.description,
+                          ],
+                          (err, res) => {
+                            if (err) {
+                              // We can just console.log any errors
+                              console.log(err.stack, err.detail, "xx");
+                            } else {
+                              console.log("inserted " + song.attributes.title);
+                            }
+                          }
+                        );
                       }
-                    }
-                  );
+                    });
+                  }
                 });
               }
             })
             .catch((err) => {
               console.log(
-                "Error: ",
+                "plan items Error: ",
                 err.message,
+                plan.pco_id,
                 err.response.data.errors[0].detail
               );
               return false;
@@ -321,7 +404,11 @@ function updateSong(pco_id) {
       );
     })
     .catch((err) => {
-      console.log("Error: ", err.message, err.response.data.errors[0].detail);
+      console.log(
+        "Update song Error: ",
+        err.message,
+        err.response.data.errors[0].detail
+      );
     });
 }
 
@@ -404,7 +491,7 @@ function getLeaders() {
             })
             .catch((err) => {
               console.log(
-                "Error: ",
+                "Get Leaders Error: ",
                 err.message,
                 err.response.data.errors[0].detail
               );
@@ -492,6 +579,9 @@ module.exports = {
   getPlanItems: () => {
     return getPlanItems();
   },
+  getPlanItemsForID: (venue_pco_id, pco_id) => {
+    return getItemsForPlan(venue_pco_id, pco_id);
+  },
   getSong: (pco_id) => {
     return getSong(pco_id);
   },
@@ -508,7 +598,6 @@ module.exports = {
     return findSongLeaders();
   },
 };
-
 
 //TODO: if a song appears multiple times in one service, only count it once. See Pasco 1/24/21 for example
 // make sure to properly adjust the slots for other songs after

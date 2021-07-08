@@ -11,13 +11,14 @@ export default function SongProvider(props) {
 
   const { loading: venuesLoading, data: venuesData } = useQuery(VENUES_QUERY);
 
-  const { loading: plansLoading, data: plansData } = useQuery(
-    VENUE_PLANS_QUERY,
-    {
-      skip: !venueID,
-      variables: { venueID },
-    }
-  );
+  const {
+    loading: plansLoading,
+    data: plansData,
+    refetch: refetchPlans,
+  } = useQuery(VENUE_PLANS_QUERY, {
+    skip: !venueID,
+    variables: { venueID },
+  });
 
   React.useEffect(() => {
     if (!venueID && venuesData?.venues?.length) {
@@ -37,6 +38,7 @@ export default function SongProvider(props) {
       currentVenue: venuesData?.venues?.find((v) => v.id === venueID * 1),
       venues: venuesData?.venues || [],
       plans: plansData?.plans || [],
+      refetchPlans,
       archivePlan,
       archiveSong,
     }),
@@ -46,6 +48,7 @@ export default function SongProvider(props) {
       plansLoading,
       venuesData?.venues,
       plansData?.plans,
+      refetchPlans,
       archivePlan,
       archiveSong,
     ]

@@ -10,6 +10,7 @@ const { get } = require("./axit");
 const {
   getVenues,
   getPlanItems,
+  getPlanItemsForID,
   getSong,
   getSongs,
   getLeaders,
@@ -496,6 +497,11 @@ app.get("/getVenues", function(req, res, next) {
 app.get("/getPlanItems", function(req, res, next) {
   getPlanItems();
   res.send("getPlanItems");
+});
+
+app.get("/getPlanItemsForID/:venue_pco_id/:pco_id/", function(req, res, next) {
+  const plan = getPlanItemsForID(req.params.venue_pco_id, req.params.pco_id);
+  res.send(JSON.stringify(plan) + " x");
 });
 
 app.get("/getSongs", function(req, res, next) {
