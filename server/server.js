@@ -522,8 +522,10 @@ app.get("/updateLeaders", function(req, res, next) {
   updateLeaders();
   res.send("updateLeaders");
 });
+
 app.get("/findSongLeaders", function(req, res, next) {
   findSongLeaders();
   res.send("findSongLeaders");
 });
+
 app.listen(4000);

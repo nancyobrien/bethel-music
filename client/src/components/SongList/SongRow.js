@@ -1,10 +1,10 @@
 import React from "react";
 import styled from "@emotion/styled/macro";
 
-
 import Icon from "widgets/Icon";
 import Colors from "styles/colors";
 import { formatDate, useSongHistory, useSongList } from "contexts/songStats";
+import { Link } from "react-router-dom";
 
 export function SongRow({ song }) {
   const { queryStartDate } = useSongList();
@@ -21,7 +21,9 @@ export function SongRow({ song }) {
           <SongHistory>
             {songHistory.map((s, idx) => (
               <div key={idx}>
-                {s.displayDate} - {s.leaderName || <em>Unknown</em>} [{s.key}]
+                <SongLink to={`/plans/${formatDate(s.planDate, "-")}`}>
+                  {s.displayDate} - {s.leaderName || <em>Unknown</em>} [{s.key}]
+                </SongLink>
               </div>
             ))}
           </SongHistory>
@@ -104,5 +106,14 @@ const SongTip = styled.span`
     ${SongHistory} {
       display: block;
     }
+  }
+`;
+
+const SongLink = styled(Link)`
+  color: ${Colors.darktext};
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
   }
 `;

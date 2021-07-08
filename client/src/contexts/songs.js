@@ -27,7 +27,7 @@ export default function SongProvider(props) {
   }, [venueID, venuesData?.venues]);
 
   const [archivePlan] = useMutation(ARCHIVE_PLAN);
-  const [archiveSong] = useMutation(ARCHIVE_SONG);
+  const [archiveSong, { loading: archivingSong }] = useMutation(ARCHIVE_SONG);
 
   const values = React.useMemo(
     () => ({
@@ -41,6 +41,7 @@ export default function SongProvider(props) {
       refetchPlans,
       archivePlan,
       archiveSong,
+      archivingSong,
     }),
     [
       venueID,
@@ -51,6 +52,7 @@ export default function SongProvider(props) {
       refetchPlans,
       archivePlan,
       archiveSong,
+      archivingSong,
     ]
   );
 

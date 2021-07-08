@@ -79,9 +79,12 @@ export default function Plans() {
     [currentPlan?.id, history, refreshPlan, venuePlans]
   );
 
-  const setPlanDate = React.useCallback((newDate) => {
-    history.push(`/plans/${formatDate(newDate, "-")}`);
-  }, [history]);
+  const setPlanDate = React.useCallback(
+    (newDate) => {
+      history.push(`/plans/${formatDate(newDate, "-")}`);
+    },
+    [history]
+  );
 
   return !planDate && lastDate ? (
     <Redirect to={`/plans/${lastDate}`} />
@@ -123,30 +126,7 @@ function PlanView({ currentPlan, updateIndex, refreshing, refreshPlan }) {
           {[...currentPlan.songs]
             .sort((a, b) => a.slot - b.slot)
             .map((s) => (
-              <PlanItem key={s.id}>
-                <div>{s.slot}</div>
-                <div>
-                  <PlanTitle>{s.song.title}</PlanTitle>
-                  <PlanAuthor>{s.song.author}</PlanAuthor>
-                </div>
-                <div>{s.song_key}</div>
-                <div>{s.leader?.fullName}</div>
-                <div>
-                  <IconButton
-                    title={s.archived ? "Unarchive" : "Archive"}
-                    onClick={() => {
-                      archiveSong({
-                        variables: {
-                          id: s.id,
-                          archived: !s.archived,
-                        },
-                      });
-                    }}
-                  >
-                    {s.archived ? <Icon icon="box1" /> : <Icon icon="box2" />}
-                  </IconButton>
-                </div>
-              </PlanItem>
+              <PlanSong song={s} key={s.id} />
             ))}
         </div>
         <PlanActions>
@@ -194,6 +174,47 @@ function PlanView({ currentPlan, updateIndex, refreshing, refreshPlan }) {
     </PlanDisplay>
   ) : null;
 }
+/////////////////////////////////////////////////////////////
+
+function PlanSong({ song }) {
+  const { archiveSong, archivingSong } = useSongData();
+  const [isArchiving, setIsArchiving] = React.useState(false);
+
+  React.useEffect(() => {
+    if (isArchiving && !archivingSong) {
+      setIsArchiving(false);
+    }
+  }, [archivingSong, isArchiving]);
+  return (
+    <PlanItem key={song.id} archived={song.archived}>
+      <div>{song.archived ? <>&ndash;</> : song.slot}</div>
+      <div>
+        <PlanTitle>{song.song.title}</PlanTitle>
+        <PlanAuthor>{song.song.author}</PlanAuthor>
+      </div>
+      <div>{song.song_key}</div>
+      <div>{song.leader?.fullName}</div>
+      <div>
+        <IconButton
+          spin={isArchiving}
+          title={song.archived ? "Unarchive" : "Archive"}
+          onClick={() => {
+            setIsArchiving(true);
+            archiveSong({
+              variables: {
+                id: song.id,
+                archived: !song.archived,
+              },
+            });
+          }}
+        >
+          {song.archived ? <Icon icon="box1" /> : <Icon icon="box2" />}
+        </IconButton>
+      </div>
+    </PlanItem>
+  );
+}
+
 /////////////////////////////////////////////////////////////
 
 function StartDate({ planDate, setPlanDate }) {
@@ -354,6 +375,11 @@ const PlanItem = styled.div`
 
   border-bottom: 1px solid #ccc;
   padding: 1rem;
+
+  background: ${({ archived }) => (archived ? "#efefef" : "transparent")};
+  color: ${Colors.darktext};
+
+  ${StandardTransition};
 
   &:last-of-type {
     border-color: transparent;
