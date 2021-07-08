@@ -8,8 +8,6 @@ const db = require("./db");
 const axios = require("axios");
 const { get } = require("./axit");
 const {
-  getVenues,
-  getPlanItems,
   getPlanItemsForID,
   getSong,
   getSongs,
@@ -17,6 +15,8 @@ const {
   updateLeaders,
   findSongLeaders,
 } = require("./processPCO");
+
+const { getVenues, testing, getPlanItems } = require("./test");
 
 const config = {
   host: process.env.POSTGRES_HOST,
@@ -489,14 +489,14 @@ app.get("/fetchData/:id", function(req, res, next) {
     });
 });
 
-app.get("/getVenues", function(req, res, next) {
-  getVenues();
-  res.send("getVenues");
+app.get("/getVenues", async function(req, res, next) {
+  const data = await getVenues();
+  res.send(data);
 });
 
-app.get("/getPlanItems", function(req, res, next) {
-  getPlanItems();
-  res.send("getPlanItems");
+app.get("/getPlanItems", async function(req, res, next) {
+  const data = await getPlanItems();
+  res.send(data);
 });
 
 app.get("/getPlanItemsForID/:venue_pco_id/:pco_id/", function(req, res, next) {
@@ -513,6 +513,7 @@ app.get("/getLeaders", function(req, res, next) {
   getLeaders();
   res.send("getLeaders");
 });
+
 app.get("/getSong/:pco_id", function(req, res, next) {
   const song = getSong(req.params.pco_id);
   res.send(JSON.stringify(song) + " x");
@@ -526,6 +527,11 @@ app.get("/updateLeaders", function(req, res, next) {
 app.get("/findSongLeaders", function(req, res, next) {
   findSongLeaders();
   res.send("findSongLeaders");
+});
+
+app.get("/testing", async (req, res) => {
+  const data = await testing();
+  res.send(data);
 });
 
 app.listen(4000);
